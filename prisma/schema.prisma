@@ -13,3 +13,71 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Admin {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+}
+
+model User {
+  id        String     @id @default(cuid())
+  name      String
+  email     String     @unique
+  password  String
+  responses Response[]
+  results   Result[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Exam {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  examCode    String     @unique
+  duration    Int // duration in minutes
+  status      String // "active" or "inactive"
+  questions   Question[]
+  responses   Response[]
+  results     Result[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Question {
+  id            String     @id @default(cuid())
+  text          String
+  options       String[] // Array of options
+  correctOption Int // Index of the correct answer  
+  examId        String
+  exam          Exam       @relation(fields: [examId], references: [id])
+  responses     Response[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Response {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  examId         String
+  exam           Exam     @relation(fields: [examId], references: [id])
+  questionId     String
+  question       Question @relation(fields: [questionId], references: [id])
+  selectedOption Int
+  isCorrect      Boolean // Indicates if the answer is correct
+  createdAt      DateTime @default(now())
+}
+
+model Result {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  examId    String
+  exam      Exam     @relation(fields: [examId], references: [id])
+  score     Int
+  total     Int // Total possible score
+  createdAt DateTime @default(now())
+}

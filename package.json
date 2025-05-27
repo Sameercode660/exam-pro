@@ -9,10 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@prisma/client": "^6.8.2",
     "next": "15.3.2",
     "prisma": "^6.8.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
