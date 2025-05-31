@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 export async function POST(req: NextRequest) {
   try {
 
-    const {title, description, examCode, duration, status} = await req.json();
+    const {title, description, examCode, duration, status, createdBy} = await req.json();
 
-    if(!title || !description || !examCode || !duration || !status) {
+    if(!title || !description || !examCode || !duration || !status || !createdBy) {
         return NextResponse.json({statusCode: 404, message: 'Anyone field is empty', status: false});
     }
 
@@ -28,7 +28,9 @@ export async function POST(req: NextRequest) {
             description,
             examCode,
             duration,
-            status
+            status, 
+            createdByAdminId: createdBy,
+            updatedByAdminId: createdBy,
         }
     });
 

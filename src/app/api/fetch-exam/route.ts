@@ -1,11 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@/generated/prisma";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
-export async function GET() {
+export async function POST(req: NextRequest) {
     try {
-        const exams = await prisma.exam.findMany({});
+
+        const {createdBy} = await req.json();
+
+        const exams = await prisma.exam.findMany({
+            where: {
+                createdBy        
+            }
+        });
 
         if(!exams || exams.length == 0) {
             return NextResponse.json({statusCode: 404, message: 'No any exam is found', response: [], status: false});

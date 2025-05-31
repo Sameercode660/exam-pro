@@ -15,10 +15,12 @@ datasource db {
 }
 
 model Admin {
-  id       String @id @default(cuid())
-  name     String
-  email    String @unique
-  password String
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  password     String
+  createdExams Exam[] @relation("AdminCreatedExam")
+  updatedExams Exam[] @relation("AdminUpdatedExam")
 }
 
 model User {
@@ -42,8 +44,12 @@ model Exam {
   questions   Question[]
   responses   Response[]
   results     Result[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdByAdminId String
+  updatedByAdminId String
+  createdBy        Admin  @relation("AdminCreatedExam", fields: [createdByAdminId], references: [id])
+  updatedBy        Admin  @relation("AdminUpdatedExam", fields: [updatedByAdminId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Question {
@@ -52,7 +58,7 @@ model Question {
   options       String[] // Array of options
   correctOption Int // Index of the correct answer  
   examId        String
-  exam          Exam       @relation(fields: [examId], references: [id])
+  exam          Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
   responses     Response[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
