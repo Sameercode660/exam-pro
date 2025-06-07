@@ -1,8 +1,152 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// // This is your Prisma schema file,
+// // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// generator client {
+//   provider = "prisma-client-js"
+//   output   = "../src/generated/prisma"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+// model User {
+//   id           String     @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   name         String
+//   email        String     @unique
+//   password     String
+//   mobileNumber Int        @unique
+//   responses    Response[]
+//   results      Result[]
+//   createdAt    DateTime   @default(now())
+//   updatedAt    DateTime   @updatedAt
+// }
+
+// model Admin {
+//   id               String          @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   name             String
+//   email            String          @unique
+//   mobileNumber     Int             @unique
+//   password         String
+//   createdExams     Exam[]          @relation("AdminCreatedExam")
+//   updatedExams     Exam[]          @relation("AdminUpdatedExam")
+//   createdQuestions Question[]
+//   ExamQuestions    ExamQuestions[]
+//   ExamQuestions    ExamQuestions[]
+// }
+
+// model Category {
+//   id        String     @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   name      String     @unique
+//   questions Question[]
+//   Topic     Topic[]
+// }
+
+// model Topic {
+//   id           String   @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   name         String
+//   categoryType String
+//   category     Category @relation(fields: [categoryType], references: [id])
+// }
+
+// model Question {
+//   id              String          @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   text            String
+//   categoryId      String
+//   category        Category        @relation(fields: [categoryId], references: [id])
+//   options         Option[]
+//   useFreq         Int             @default(0)
+//   rightFreq       Int             @default(0)
+//   wrongFreq       Int             @default(0)
+//   difficultyLevel DifficultyLevel @default(MEDIUM)
+//   correctOption   String
+//   createdAt       DateTime        @default(now())
+//   updatedAt       DateTime        @updatedAt
+//   Admin           Admin?          @relation(fields: [adminId], references: [id])
+//   adminId         String?
+//   Response        Response[]
+// }
+
+// model Option {
+//   id         String   @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   text       String
+//   questionId String
+//   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+//   isCorrect  Boolean  @default(false)
+// }
+
+// model Exam {
+//   id               String        @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   title            String
+//   description      String
+//   examCode         String        @unique
+//   duration         Int
+//   status           String
+//   // questionCount   Int counting the number of record
+//   ExamQuestionsId  String
+//   ExamQuestions    ExamQuestions @relation(fields: [ExamQuestionsId], references: [id])
+//   createdByAdminId String
+//   updatedByAdminId String
+//   createdBy        Admin         @relation("AdminCreatedExam", fields: [createdByAdminId], references: [id])
+//   updatedBy        Admin         @relation("AdminUpdatedExam", fields: [updatedByAdminId], references: [id])
+//   createdAt        DateTime      @default(now())
+//   updatedAt        DateTime      @updatedAt
+
+//   // copiedFrom    String? exam copy functianality
+// }
+
+// model ExamQuestions {
+//   id               String     @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   questionIds      String[]
+//   responses        Response[]
+//   results          Result[]
+//   createdByAdminId String
+//   updatedByAdminId String
+//   createdBy        Admin      @relation("AdminCreatedExam", fields: [createdByAdminId], references: [id])
+//   updatedBy        Admin      @relation("AdminUpdatedExam", fields: [updatedByAdminId], references: [id])
+//   createdAt        DateTime   @default(now())
+//   updatedAt        DateTime   @updatedAt
+// }
+
+// model Response {
+//   id              String         @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   userId          String
+//   user            User           @relation(fields: [userId], references: [id])
+//   examId          String
+//   exam            Exam           @relation(fields: [examId], references: [id])
+//   questionId      String
+//   question        Question       @relation(fields: [questionId], references: [id])
+//   selectedOption  Int
+//   isCorrect       Boolean
+//   createdAt       DateTime       @default(now())
+//   ExamQuestions   ExamQuestions? @relation(fields: [examQuestionsId], references: [id])
+//   examQuestionsId String?        @db.Char(8)
+// }
+
+// model Result {
+//   id              String         @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+//   userId          String
+//   user            User           @relation(fields: [userId], references: [id])
+//   examId          String
+//   exam            Exam           @relation(fields: [examId], references: [id])
+//   score           Int
+//   total           Int
+//   createdAt       DateTime       @default(now())
+//   ExamQuestions   ExamQuestions? @relation(fields: [examQuestionsId], references: [id])
+//   examQuestionsId String?        @db.Char(8)
+// }
+
+// enum DifficultyLevel {
+//   EASY
+//   MEDIUM
+//   DIFFICULT
+//   VERY_DIFFICULT
+//   TRICKY
+// }
 
 generator client {
   provider = "prisma-client-js"
@@ -14,76 +158,123 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Admin {
-  id           String @id @default(cuid())
-  name         String
-  email        String @unique
-  password     String
-  createdExams Exam[] @relation("AdminCreatedExam")
-  updatedExams Exam[] @relation("AdminUpdatedExam")
-}
-
 model User {
-  id        String     @id @default(cuid())
-  name      String
-  email     String     @unique
-  password  String
-  responses Response[]
-  results   Result[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id           String     @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+  name         String
+  email        String     @unique
+  password     String
+  mobileNumber Int        @unique
+  responses    Response[]
+  results      Result[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
-model Exam {
-  id          String     @id @default(cuid())
-  title       String
-  description String
-  examCode    String     @unique
-  duration    Int // duration in minutes
-  status      String // "active" or "inactive"
-  questions   Question[]
-  responses   Response[]
-  results     Result[]
-  createdByAdminId String
-  updatedByAdminId String
-  createdBy        Admin  @relation("AdminCreatedExam", fields: [createdByAdminId], references: [id])
-  updatedBy        Admin  @relation("AdminUpdatedExam", fields: [updatedByAdminId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Admin {
+  id           String     @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+  name         String
+  email        String     @unique
+  mobileNumber String        @unique
+  password     String
+  createdExams Exam[]     @relation("AdminCreatedExam")
+  updatedExams Exam[]     @relation("AdminUpdatedExam")
+  questions    Question[] // Directly related to questions
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Category {
+  id        String     @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+  name      String     @unique
+  questions Question[]
+  topics    Topic[]
+}
+
+model Topic {
+  id         String     @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+  name       String
+  category   Category   @relation(fields: [categoryId], references: [id])
+  categoryId String
+  Question   Question[]
 }
 
 model Question {
-  id            String     @id @default(cuid())
+  id            String     @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
   text          String
-  options       String[] // Array of options
-  correctOption Int // Index of the correct answer  
-  examId        String
-  exam          Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
-  responses     Response[]
+  categoryId    String
+  category      Category   @relation(fields: [categoryId], references: [id])
+  topicId       String
+  topic         Topic      @relation(fields: [topicId], references: [id])
+  options       Option[]
+  useFreq       Int        @default(0)
+  rightFreq     Int        @default(0)
+  wrongFreq     Int        @default(0)
+  difficulty    Difficulty @default(MEDIUM)
+  correctOption String
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+  adminId       String?
+  admin         Admin?     @relation(fields: [adminId], references: [id])
+  responses     Response[]
+  Exam          Exam?      @relation(fields: [examId], references: [id])
+  examId        String?    @db.Char(8)
+  updatedBy     String?
+}
+
+model Option {
+  id         String   @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+  text       String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String
+  isCorrect  Boolean  @default(false)
+}
+
+model Exam {
+  id               String     @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
+  title            String
+  description      String
+  examCode         String     @unique
+  duration         Int
+  status           String
+  questions        Question[] // Direct Many-to-Many relation
+  createdBy        Admin      @relation("AdminCreatedExam", fields: [createdByAdminId], references: [id])
+  updatedBy        Admin      @relation("AdminUpdatedExam", fields: [updatedByAdminId], references: [id])
+  createdByAdminId String
+  updatedByAdminId String
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  Response         Response[]
+  Result           Result[]
 }
 
 model Response {
-  id             String   @id @default(cuid())
-  userId         String
+  id             String   @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
   user           User     @relation(fields: [userId], references: [id])
-  examId         String
+  userId         String
   exam           Exam     @relation(fields: [examId], references: [id])
-  questionId     String
+  examId         String
   question       Question @relation(fields: [questionId], references: [id])
+  questionId     String
   selectedOption Int
-  isCorrect      Boolean // Indicates if the answer is correct
+  isCorrect      Boolean
   createdAt      DateTime @default(now())
 }
 
 model Result {
-  id        String   @id @default(cuid())
-  userId    String
+  id        String   @id @default(dbgenerated("LPAD((FLOOR(RANDOM() * 100000000))::TEXT, 8, '0')")) @db.Char(8)
   user      User     @relation(fields: [userId], references: [id])
-  examId    String
+  userId    String
   exam      Exam     @relation(fields: [examId], references: [id])
+  examId    String
   score     Int
-  total     Int // Total possible score
+  total     Int
   createdAt DateTime @default(now())
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  VERY_HARD
+  TRICKY
 }
