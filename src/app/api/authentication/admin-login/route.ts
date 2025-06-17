@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({statusCode: 404, message: 'Anyone field is empty', status: false});
         }
 
-        const admin = await prisma.admin.findUnique({
+        const admin = await prisma.user.findUnique({
             where: {
                 email, 
                 password
