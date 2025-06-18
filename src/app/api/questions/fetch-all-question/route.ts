@@ -5,10 +5,9 @@ const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
-    // Extract adminId from query parameters
-    const {adminId} = await req.json();
+    const { adminId, page = 1 } = await req.json();
 
-    // Validate the adminId
+    // Validate adminId
     if (!adminId) {
       return NextResponse.json({
         statusCode: 400,
@@ -17,34 +16,49 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Fetch all questions for the given adminId
+    const pageSize = 10; // Number of records per page
+    const skip = (page - 1) * pageSize; // Calculate how many records to skip
+
+    // Fetch paginated questions with admin details
     const questions = await prisma.question.findMany({
       where: { adminId: parseInt(adminId) },
       include: {
         category: true,
         topic: true,
         options: true,
+        admin: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
+      skip,
+      take: pageSize,
     });
 
-    // Check if questions exist
-    if (questions.length === 0) {
-      return NextResponse.json({
-        statusCode: 404,
-        message: "No questions found for the given adminId",
-        status: false,
-      });
-    }
+    // Get the total count of questions for pagination info
+    const totalQuestions = await prisma.question.count({
+      where: { adminId: parseInt(adminId) },
+    });
 
-    // Return the questions
+    // Return the paginated questions
     return NextResponse.json({
       statusCode: 200,
       message: "Questions fetched successfully",
-      response: questions,
+      response: {
+        questions: questions.map((q) => ({
+          ...q,
+          createdByName: q.admin?.name || "Unknown",
+        })),
+        totalQuestions,
+        page,
+        pageSize,
+      },
       status: true,
     });
   } catch (error: unknown) {
-    console.error("Error in GET request:", error);
+    console.error("Error in POST request:", error);
 
     return NextResponse.json({
       statusCode: 500,

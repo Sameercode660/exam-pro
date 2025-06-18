@@ -10,8 +10,12 @@ export async function POST(req: NextRequest) {
     
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const adminId = 1;
-    // const adminId = Number(formData.get('adminId'));
+
+    const {searchParams} = req.nextUrl;
+    const adminId = searchParams.get('adminId');
+    
+    console.log('adminId', adminId)
+
 
 
     if(!adminId) {
@@ -83,7 +87,7 @@ export async function POST(req: NextRequest) {
           topicId: topic.id,
           difficulty: difficultyLevel.toUpperCase() as Difficulty,
           correctOption: parseInt(correctOption),
-          adminId,
+          adminId: Number(adminId),
           options: {
             create: [
               { text: option1, isCorrect: correctOption === 1 },
