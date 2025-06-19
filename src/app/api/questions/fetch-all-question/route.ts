@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     // Fetch paginated questions with admin details
     const questions = await prisma.question.findMany({
-      where: { adminId: parseInt(adminId) },
+      where: { adminId: parseInt(adminId), visibility: true },
       include: {
         category: true,
         topic: true,

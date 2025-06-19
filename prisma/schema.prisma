@@ -219,6 +219,7 @@ model Question {
   updatedBy         Int?
   QuestionFrequency QuestionFrequency?
   IntResponse       IntResponse[]
+  visibility        Boolean @default(true)
 }
 
 model Option {

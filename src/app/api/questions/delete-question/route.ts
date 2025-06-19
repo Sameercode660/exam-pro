@@ -29,9 +29,12 @@ export async function DELETE(req: NextRequest) {
       });
     }
 
-    // Delete the question
-    await prisma.question.delete({
+    // update the question
+    await prisma.question.update({
       where: { id: questionId },
+      data: {
+        visibility: false
+      }
     });
 
     return NextResponse.json({
