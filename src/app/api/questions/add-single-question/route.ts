@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient, Difficulty } from "@/generated/prisma";
+import { Difficulty } from "@/generated/prisma";
+import prisma from "@/utils/prisma";
 
-const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {

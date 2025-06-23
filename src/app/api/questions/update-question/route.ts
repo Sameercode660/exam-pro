@@ -3,16 +3,20 @@ import prisma from "@/utils/prisma";
 
 export async function PUT(req: NextRequest) {
   try {
+
+    const body = await req.json();
+    
     const {
       questionId,
       text,
       categoryName,
       topicName,
       difficulty,
-      correctOption,
       options,
       adminId,
-    } = await req.json();
+    } = body;
+    
+    const correctOption = Number(body.correctOption);
 
     // Validate required fields
     if (!questionId || !categoryName || !topicName || !adminId) {
@@ -71,7 +75,7 @@ export async function PUT(req: NextRequest) {
       text: option.text,
       isCorrect: index + 1 === correctOption, // Set isCorrect to true for the correct option
     }));
-
+    console.log('options', updatedOptions);
     // Update the question
     const updatedQuestion = await prisma.question.update({
       where: { id: questionId },

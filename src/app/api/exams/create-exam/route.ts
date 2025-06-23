@@ -1,11 +1,14 @@
 import { NextResponse, NextRequest } from "next/server";
-import { PrismaClient } from "@/generated/prisma";
+import prisma from "@/utils/prisma";
 
-const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
-    const { title, description, examCode, duration, status, createdByAdminId } = await req.json();
+
+    const body = await req.json();
+
+    const { title, description, examCode, status, createdByAdminId } = body;
+    const duration = Number(body.duration);
 
     // Validation
     if (!title || !examCode || !duration || !status || !createdByAdminId) {
