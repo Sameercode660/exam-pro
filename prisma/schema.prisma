@@ -182,11 +182,15 @@ model User {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   IntResponse  IntResponse[]
+  Category     Category[]
+  Topic        Topic[]
 }
 
 model Category {
   id        Int        @id @default(autoincrement())
   name      String     @unique
+  adminId   Int?
+  admin     User?      @relation(fields: [adminId], references: [id])
   questions Question[]
   topics    Topic[]
 }
@@ -195,6 +199,8 @@ model Topic {
   id         Int        @id @default(autoincrement())
   name       String
   category   Category   @relation(fields: [categoryId], references: [id])
+  adminId    Int?
+  admin      User?      @relation(fields: [adminId], references: [id])
   categoryId Int
   Question   Question[]
 }
@@ -219,7 +225,7 @@ model Question {
   updatedBy         Int?
   QuestionFrequency QuestionFrequency?
   IntResponse       IntResponse[]
-  visibility        Boolean @default(true)
+  visibility        Boolean            @default(true)
 }
 
 model Option {

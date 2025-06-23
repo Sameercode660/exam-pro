@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File;
 
     const {searchParams} = req.nextUrl;
-    const adminId = searchParams.get('adminId');
+    const adminId = Number(searchParams.get('adminId'));
     
     console.log('adminId', adminId)
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       });
       if (!category) {
         category = await prisma.category.create({
-          data: { name: categoryName },
+          data: { name: categoryName, adminId },
         });
       }
 
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       });
       if (!topic) {
         topic = await prisma.topic.create({
-          data: { name: topicName, categoryId: category.id },
+          data: { name: topicName, categoryId: category.id, adminId },
         });
       }
 

@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const difficulty = req.nextUrl.searchParams.get("difficulty");
 
     // Build the filtering criteria
-    const filters: any = {};
+    const filters: any = {visibility: true};
     if (categoryId) filters.categoryId = parseInt(categoryId);
     if (topicId) filters.topicId = parseInt(topicId);
     if (difficulty) filters.difficulty = difficulty;

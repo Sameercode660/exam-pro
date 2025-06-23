@@ -31,6 +31,7 @@ CREATE TABLE "User" (
 CREATE TABLE "Category" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "adminId" INTEGER,
 
     CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
 );
@@ -39,6 +40,7 @@ CREATE TABLE "Category" (
 CREATE TABLE "Topic" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "adminId" INTEGER,
     "categoryId" INTEGER NOT NULL,
 
     CONSTRAINT "Topic_pkey" PRIMARY KEY ("id")
@@ -57,8 +59,19 @@ CREATE TABLE "Question" (
     "adminId" INTEGER,
     "examId" INTEGER,
     "updatedBy" INTEGER,
+    "visibility" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "Question_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Option" (
+    "id" SERIAL NOT NULL,
+    "text" TEXT NOT NULL,
+    "questionId" INTEGER NOT NULL,
+    "isCorrect" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "Option_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -70,16 +83,6 @@ CREATE TABLE "QuestionFrequency" (
     "wrongFreq" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "QuestionFrequency_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Option" (
-    "id" SERIAL NOT NULL,
-    "text" TEXT NOT NULL,
-    "questionId" INTEGER NOT NULL,
-    "isCorrect" BOOLEAN NOT NULL DEFAULT false,
-
-    CONSTRAINT "Option_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -109,6 +112,17 @@ CREATE TABLE "Response" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Response_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "IntResponse" (
+    "id" SERIAL NOT NULL,
+    "examId" INTEGER NOT NULL,
+    "questionId" INTEGER NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "text" TEXT NOT NULL,
+
+    CONSTRAINT "IntResponse_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -145,7 +159,13 @@ CREATE UNIQUE INDEX "QuestionFrequency_questionId_key" ON "QuestionFrequency"("q
 CREATE UNIQUE INDEX "Exam_examCode_key" ON "Exam"("examCode");
 
 -- AddForeignKey
+ALTER TABLE "Category" ADD CONSTRAINT "Category_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Topic" ADD CONSTRAINT "Topic_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Topic" ADD CONSTRAINT "Topic_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Question" ADD CONSTRAINT "Question_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -160,10 +180,10 @@ ALTER TABLE "Question" ADD CONSTRAINT "Question_adminId_fkey" FOREIGN KEY ("admi
 ALTER TABLE "Question" ADD CONSTRAINT "Question_examId_fkey" FOREIGN KEY ("examId") REFERENCES "Exam"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "QuestionFrequency" ADD CONSTRAINT "QuestionFrequency_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "Question"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Option" ADD CONSTRAINT "Option_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "Question"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Option" ADD CONSTRAINT "Option_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "Question"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "QuestionFrequency" ADD CONSTRAINT "QuestionFrequency_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "Question"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Exam" ADD CONSTRAINT "Exam_createdByAdminId_fkey" FOREIGN KEY ("createdByAdminId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -179,6 +199,15 @@ ALTER TABLE "Response" ADD CONSTRAINT "Response_examId_fkey" FOREIGN KEY ("examI
 
 -- AddForeignKey
 ALTER TABLE "Response" ADD CONSTRAINT "Response_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "Question"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "IntResponse" ADD CONSTRAINT "IntResponse_examId_fkey" FOREIGN KEY ("examId") REFERENCES "Exam"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "IntResponse" ADD CONSTRAINT "IntResponse_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "IntResponse" ADD CONSTRAINT "IntResponse_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "Question"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Result" ADD CONSTRAINT "Result_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Participant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
