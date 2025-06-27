@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
     const { title, description, examCode, status, createdByAdminId } = body;
     const duration = Number(body.duration);
-
+    console.log(title, description, examCode, status, createdByAdminId, duration)
     // Validation
     if (!title || !examCode || !duration || !status || !createdByAdminId) {
       return NextResponse.json({
@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log(newExam)
     return NextResponse.json({
       statusCode: 201,
       message: "Exam created successfully",

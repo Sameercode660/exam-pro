@@ -6,10 +6,12 @@ export async function POST(req: NextRequest) {
   try {
 
     const {adminId} = await req.json();
+    console.log(adminId)
 
     const exams = await prisma.exam.findMany({
       where: {
-        createdByAdminId: adminId
+        createdByAdminId: adminId,
+        visibility: true
       },
       include: {
         createdBy: true,

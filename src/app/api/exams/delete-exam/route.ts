@@ -3,10 +3,10 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 
 
-export async function DELETE(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     
-    const {examId} = await req.json();
+    const {examId, adminId} = await req.json();
 
     if (!examId) {
       return NextResponse.json({
@@ -16,8 +16,11 @@ export async function DELETE(req: NextRequest) {
       });
     }
 
-    const deletedExam = await prisma.exam.delete({
-      where: { id: parseInt(examId) },
+    const deletedExam = await prisma.exam.update({
+      where: { id: parseInt(examId), createdByAdminId: adminId },
+      data: {
+        visibility: false
+      }
     });
 
     return NextResponse.json({

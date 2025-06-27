@@ -180,7 +180,7 @@ model User {
   updatedExams Exam[]        @relation("AdminUpdatedExam")
   questions    Question[] // Directly related to questions
   createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  updatedAt    DateTime      @default(now())
   IntResponse  IntResponse[]
   Category     Category[]
   Topic        Topic[]
@@ -263,6 +263,7 @@ model Exam {
   Response         Response[]
   Result           Result[]
   IntResponse      IntResponse[]
+  visibility       Boolean @default(true)
 }
 
 model Response {

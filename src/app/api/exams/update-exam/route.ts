@@ -3,7 +3,7 @@ import prisma from "@/utils/prisma";
 
 export async function PUT(req: NextRequest) {
   try {
-    const { id, title, description, examCode, duration, status, updatedByAdminId } = await req.json();
+    const { id, adminId, title, description, examCode, duration, status, updatedByAdminId } = await req.json();
 
     if (!id) {
       return NextResponse.json({
@@ -14,7 +14,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const updatedExam = await prisma.exam.update({
-      where: { id },
+      where: { id, createdByAdminId: adminId},
       data: {
         title,
         description,

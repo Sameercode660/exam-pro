@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const exam = await prisma.exam.findUnique({
-      where: { id: parseInt(examId) , createdByAdminId: parseInt(adminId) },
+      where: { id: parseInt(examId) , createdByAdminId: parseInt(adminId), visibility: true },
       include: {
         createdBy: true,
         updatedBy: true,
