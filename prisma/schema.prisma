@@ -163,7 +163,7 @@ model Participant {
   name         String
   email        String     @unique
   password     String
-  mobileNumber Int        @unique
+  mobileNumber String        @unique
   responses    Response[]
   results      Result[]
   createdAt    DateTime   @default(now())
