@@ -1,38 +1,66 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/utils/prisma';
+import jwt from 'jsonwebtoken';
+import { serialize } from 'cookie';
 
 export async function POST(req: NextRequest) {
-    try {
-        
-        const {email, password} = await req.json();
+  try {
+    const { email, password } = await req.json();
 
-        if(!email || !password) {
-            return NextResponse.json({statusCode: 404, message: 'Anyone field is empty', status: false});
-        }
-
-        const admin = await prisma.user.findUnique({
-            where: {
-                email, 
-                password
-            }
-        })
-
-        if(!admin) {
-            return NextResponse.json({statusCode: 404, message: 'Admin does not exist', status: false});
-        }
-
-        return NextResponse.json({statusCode: 200, message: 'Login successfully', status: true, response: admin});
-
-    } catch (error: unknown) {
-        
-        if(error instanceof Error) {
-            console.log(error.message);
-
-            return NextResponse.json({statusCode: 500, message: error.message, status: false});
-        }
-
-        console.log(error)
-
-        return NextResponse.json({statusCode: 500, message: 'Unknown error occurred', status: false});
+    // Validate input
+    if (!email || !password) {
+      return NextResponse.json(
+        { message: 'Email and password are required.' },
+        { status: 400 }
+      );
     }
+
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user || user.password !== password) {
+      return NextResponse.json(
+        { message: 'Invalid email or password.' },
+        { status: 401 }
+      );
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET || 'Sameer',
+      { expiresIn: '1d' }
+    );
+
+    // Serialize cookie
+    const cookie = serialize('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24, // 1 day
+      path: '/',
+    });
+
+    const response = NextResponse.json({
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+
+    response.headers.set('Set-Cookie', cookie);
+
+    return response;
+  } catch (error) {
+    console.error('Login error:', error);
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
 }

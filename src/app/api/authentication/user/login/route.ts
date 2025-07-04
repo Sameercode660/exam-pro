@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       path: "/",
     });
 
-    const response = NextResponse.json({ message: "Login successful", participant });
+    const response = NextResponse.json({ message: "Login successful", participant, token });
     response.headers.set("Set-Cookie", serializedCookie);
 
     return response;

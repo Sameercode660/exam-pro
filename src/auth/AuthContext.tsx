@@ -8,45 +8,52 @@ interface AuthContextProps {
   user: any;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, mobileNumber: number) => Promise<void>;
+  register: (name: string, email: string, password: string, mobileNumber: string) => Promise<void>;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+const AuthContext = createContext<AuthContextProps & { isInitialized: boolean } | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false); // Initialization flag
   const router = useRouter();
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    if (storedToken) setToken(storedToken);
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        console.warn('Invalid user data in localStorage');
+        setUser(null);
+      }
     }
+    setIsInitialized(true); // Mark initialization as complete
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const res: any = await axios.post('/api/authentication/user/login', { email, password });
-      const { token, user } = res.data;
+      const res = await axios.post('/api/authentication/user/login', { email, password });
+      const { token, participant } = res.data;
       setToken(token);
-      setUser(user);
+      setUser(participant);
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      router.push('/dashboard'); // Redirect to a protected page
+      localStorage.setItem('user', JSON.stringify(participant));
+      router.push('/home');
     } catch (error: any) {
       console.error('Login failed', error.response?.data?.message || error.message);
     }
   };
 
-  const register = async (name: string, email: string, password: string, mobileNumber: number) => {
+  const register = async (name: string, email: string, password: string, mobileNumber: string) => {
     try {
       const res: any = await axios.post('/api/authentication/user/register', { name, email, password, mobileNumber });
       alert(res.data.message);
-      router.push('/login'); // Redirect to login page
+      router.push('/login');
     } catch (error: any) {
       console.error('Registration failed', error.response?.data?.message || error.message);
     }
@@ -61,11 +68,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, isInitialized }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

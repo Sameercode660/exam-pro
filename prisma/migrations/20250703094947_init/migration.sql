@@ -1,13 +1,22 @@
 -- CreateEnum
 CREATE TYPE "Difficulty" AS ENUM ('EASY', 'MEDIUM', 'HARD', 'VERY_HARD', 'TRICKY');
 
+-- CreateEnum
+CREATE TYPE "RoleEnum" AS ENUM ('SuperAdmin', 'Admin', 'SuperUser', 'User');
+
+-- CreateEnum
+CREATE TYPE "ExamStatus" AS ENUM ('Scheduled', 'Active', 'Inactive', 'Completed');
+
+-- CreateEnum
+CREATE TYPE "ParticipantStatus" AS ENUM ('NotStarted', 'InProgress', 'Completed');
+
 -- CreateTable
 CREATE TABLE "Participant" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "mobileNumber" INTEGER NOT NULL,
+    "mobileNumber" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -21,10 +30,29 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "mobileNumber" TEXT NOT NULL,
     "password" TEXT NOT NULL,
+    "role" "RoleEnum" NOT NULL,
+    "organizationId" INTEGER,
+    "createdById" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Organization" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
+    "address" TEXT NOT NULL,
+    "State" TEXT NOT NULL,
+    "Country" TEXT NOT NULL,
+    "CountryCode" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -40,8 +68,8 @@ CREATE TABLE "Category" (
 CREATE TABLE "Topic" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "adminId" INTEGER,
     "categoryId" INTEGER NOT NULL,
+    "adminId" INTEGER,
 
     CONSTRAINT "Topic_pkey" PRIMARY KEY ("id")
 );
@@ -52,8 +80,8 @@ CREATE TABLE "Question" (
     "text" TEXT NOT NULL,
     "categoryId" INTEGER NOT NULL,
     "topicId" INTEGER NOT NULL,
-    "difficulty" "Difficulty" NOT NULL DEFAULT 'MEDIUM',
     "correctOption" INTEGER NOT NULL,
+    "difficulty" "Difficulty" NOT NULL DEFAULT 'MEDIUM',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "adminId" INTEGER,
@@ -95,10 +123,24 @@ CREATE TABLE "Exam" (
     "status" TEXT NOT NULL,
     "createdByAdminId" INTEGER NOT NULL,
     "updatedByAdminId" INTEGER NOT NULL,
+    "createdById" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "visibility" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "Exam_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ExamParticipant" (
+    "id" SERIAL NOT NULL,
+    "examId" INTEGER NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "startTime" TIMESTAMP(3),
+    "endTime" TIMESTAMP(3),
+    "status" "ParticipantStatus" NOT NULL,
+
+    CONSTRAINT "ExamParticipant_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -137,6 +179,18 @@ CREATE TABLE "Result" (
     CONSTRAINT "Result_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Group" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "validFrom" TIMESTAMP(3) NOT NULL,
+    "validTo" TIMESTAMP(3) NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "organizationId" INTEGER NOT NULL,
+
+    CONSTRAINT "Group_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Participant_email_key" ON "Participant"("email");
 
@@ -150,6 +204,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "User_mobileNumber_key" ON "User"("mobileNumber");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Organization_email_key" ON "Organization"("email");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
@@ -157,6 +214,12 @@ CREATE UNIQUE INDEX "QuestionFrequency_questionId_key" ON "QuestionFrequency"("q
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Exam_examCode_key" ON "Exam"("examCode");
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Category" ADD CONSTRAINT "Category_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -192,6 +255,15 @@ ALTER TABLE "Exam" ADD CONSTRAINT "Exam_createdByAdminId_fkey" FOREIGN KEY ("cre
 ALTER TABLE "Exam" ADD CONSTRAINT "Exam_updatedByAdminId_fkey" FOREIGN KEY ("updatedByAdminId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Exam" ADD CONSTRAINT "Exam_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ExamParticipant" ADD CONSTRAINT "ExamParticipant_examId_fkey" FOREIGN KEY ("examId") REFERENCES "Exam"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ExamParticipant" ADD CONSTRAINT "ExamParticipant_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Response" ADD CONSTRAINT "Response_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Participant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -214,3 +286,9 @@ ALTER TABLE "Result" ADD CONSTRAINT "Result_userId_fkey" FOREIGN KEY ("userId") 
 
 -- AddForeignKey
 ALTER TABLE "Result" ADD CONSTRAINT "Result_examId_fkey" FOREIGN KEY ("examId") REFERENCES "Exam"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Group" ADD CONSTRAINT "Group_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Group" ADD CONSTRAINT "Group_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
