@@ -354,6 +354,7 @@ model Participant {
   email        String     @unique
   password     String
   mobileNumber String     @unique
+  active       Boolean    @default(true)
   responses    Response[]
   results      Result[]
   createdAt    DateTime   @default(now())
@@ -369,6 +370,7 @@ model User {
   role           RoleEnum
   organizationId Int?
   createdById    Int?
+  active         Boolean           @default(true)
   createdBy      User?             @relation("CreatedUsers", fields: [createdById], references: [id])
   createdUsers   User[]            @relation("CreatedUsers")
   createdExams   Exam[]            @relation("AdminCreatedExam")
@@ -513,25 +515,25 @@ model Response {
 }
 
 model IntResponse {
-  id         Int    @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   examId     Int
   questionId Int
   userId     Int
   text       String
-  exam     Exam     @relation(fields: [examId], references: [id])
-  user     User     @relation(fields: [userId], references: [id])
-  question Question @relation(fields: [questionId], references: [id])
+  exam       Exam     @relation(fields: [examId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id])
 }
 
 model Result {
-  id        Int      @id @default(autoincrement())
+  id        Int         @id @default(autoincrement())
   userId    Int
   examId    Int
   score     Int
   total     Int
-  createdAt DateTime @default(now())
-  user Participant @relation(fields: [userId], references: [id])
-  exam Exam        @relation(fields: [examId], references: [id])
+  createdAt DateTime    @default(now())
+  user      Participant @relation(fields: [userId], references: [id])
+  exam      Exam        @relation(fields: [examId], references: [id])
 }
 
 model Group {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 import nodemailer from "nodemailer";
-import { hash } from "bcryptjs";
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -66,11 +66,9 @@ export async function POST(req: NextRequest) {
     });
 
     // ✅ 4. Create Admin User
-    const hashedPassword = await hash(user.password, 10);
     const admin = await prisma.user.create({
       data: {
         ...user,
-        password: hashedPassword,
         role: "Admin",
         organizationId: org.id,
       },
