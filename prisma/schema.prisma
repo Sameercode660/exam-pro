@@ -349,42 +349,44 @@ enum ParticipantStatus {
 }
 
 model Participant {
-  id           Int        @id @default(autoincrement())
-  name         String
-  email        String     @unique
-  password     String
-  mobileNumber String     @unique
-  active       Boolean    @default(true)
-  responses    Response[]
-  results      Result[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id               Int                @id @default(autoincrement())
+  name             String
+  email            String             @unique
+  password         String
+  mobileNumber     String             @unique
+  active           Boolean            @default(true)
+  responses        Response[]
+  results          Result[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  GroupParticipant GroupParticipant[]
 }
 
 model User {
-  id             Int               @id @default(autoincrement())
-  name           String
-  email          String            @unique
-  mobileNumber   String            @unique
-  password       String
-  role           RoleEnum
-  organizationId Int?
-  createdById    Int?
-  active         Boolean           @default(true)
-  createdBy      User?             @relation("CreatedUsers", fields: [createdById], references: [id])
-  createdUsers   User[]            @relation("CreatedUsers")
-  createdExams   Exam[]            @relation("AdminCreatedExam")
-  updatedExams   Exam[]            @relation("AdminUpdatedExam")
-  questions      Question[]
-  IntResponse    IntResponse[]
-  Category       Category[]
-  Topic          Topic[]
-  examsTaken     ExamParticipant[]
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @default(now())
-  Organization   Organization?     @relation(fields: [organizationId], references: [id])
-  Exam           Exam[]
-  Group          Group[]
+  id               Int                @id @default(autoincrement())
+  name             String
+  email            String             @unique
+  mobileNumber     String             @unique
+  password         String
+  role             RoleEnum
+  organizationId   Int?
+  createdById      Int?
+  active           Boolean            @default(true)
+  createdBy        User?              @relation("CreatedUsers", fields: [createdById], references: [id])
+  createdUsers     User[]             @relation("CreatedUsers")
+  createdExams     Exam[]             @relation("AdminCreatedExam")
+  updatedExams     Exam[]             @relation("AdminUpdatedExam")
+  questions        Question[]
+  IntResponse      IntResponse[]
+  Category         Category[]
+  Topic            Topic[]
+  examsTaken       ExamParticipant[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @default(now())
+  Organization     Organization?      @relation(fields: [organizationId], references: [id])
+  Exam             Exam[]
+  Group            Group[]
+  GroupParticipant GroupParticipant[]
 }
 
 model Organization {
@@ -537,12 +539,38 @@ model Result {
 }
 
 model Group {
-  id             Int          @id @default(autoincrement())
-  name           String
-  validFrom      DateTime
-  validTo        DateTime
-  userId         Int
-  user           User         @relation(fields: [userId], references: [id])
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+
+  createdById Int
+  createdBy   User @relation(fields: [createdById], references: [id])
+
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id])
+
+  participants GroupParticipant[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  visibility  Boolean @default(true)
+}
+
+model GroupParticipant {
+  id            Int @id @default(autoincrement())
+  groupId       Int
+  participantId Int
+
+  group Group       @relation(fields: [groupId], references: [id])
+  user  Participant @relation(fields: [participantId], references: [id])
+
+  assignedAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+  User       User?    @relation(fields: [userId], references: [id])
+  userId     Int?
+  visibility Boolean @default(true)
+
+  @@unique([groupId, participantId])
 }
