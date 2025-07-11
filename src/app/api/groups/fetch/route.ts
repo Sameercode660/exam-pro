@@ -1,41 +1,46 @@
+// POST /api/super-admin/groups
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
 export async function POST(req: NextRequest) {
   try {
-    const { adminId } = await req.json();
+    const { adminId, organizationId, search } = await req.json();
 
-    // Validation
-    if (!adminId || typeof adminId !== 'number') {
-      return NextResponse.json({ error: 'Invalid or missing adminId' }, { status: 400 });
+    if (!adminId && !organizationId) {
+      return NextResponse.json({ error: 'adminId or organizationId is required.' }, { status: 400 });
     }
 
-    // Check if admin exists
-    const admin = await prisma.user.findUnique({
-      where: { id: adminId },
-    });
+    // Build base where clause
+    const whereClause: any = {
+      visibility: true,
+    };
 
-    if (!admin) {
-      return NextResponse.json({ error: 'Admin not found' }, { status: 404 });
+    if (adminId) {
+      whereClause.createdById = adminId;
+    } else if (organizationId) {
+      whereClause.organizationId = organizationId;
     }
 
-    // Fetch groups created by this admin
+    // Search  (multiword search)
+    if (search?.trim()) {
+      const terms = search.trim().split(/\s+/);
+      whereClause.OR = terms.flatMap((term: string) => [
+        { name: { contains: term, mode: 'insensitive' } },
+        { description: { contains: term, mode: 'insensitive' } },
+        {
+          createdBy: {
+            name: { contains: term, mode: 'insensitive' }
+          }
+        }
+      ]);
+    }
+
     const groups = await prisma.group.findMany({
-      where: {
-        createdById: adminId,
-        visibility: true, // optional: to show only visible groups
-      },
+      where: whereClause,
       include: {
-        organization: true,
-        participants: {
-          include: {
-            user: true,
-          },
-        },
+        createdBy: { select: { name: true, id: true } },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
     return NextResponse.json(groups);

@@ -355,10 +355,13 @@ model Participant {
   password         String
   mobileNumber     String             @unique
   active           Boolean            @default(true)
+  createdById      Int?
+  createdBy        User?              @relation(fields: [createdById], references: [id])
   responses        Response[]
   results          Result[]
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+  approved         Boolean            @default(false)
   GroupParticipant GroupParticipant[]
 }
 
@@ -387,6 +390,7 @@ model User {
   Exam             Exam[]
   Group            Group[]
   GroupParticipant GroupParticipant[]
+  Participant      Participant[]
 }
 
 model Organization {
@@ -555,7 +559,7 @@ model Group {
   participants GroupParticipant[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
-  visibility  Boolean @default(true)
+  visibility   Boolean            @default(true)
 }
 
 model GroupParticipant {
@@ -570,7 +574,7 @@ model GroupParticipant {
   isActive   Boolean  @default(true)
   User       User?    @relation(fields: [userId], references: [id])
   userId     Int?
-  visibility Boolean @default(true)
+  visibility Boolean  @default(true)
 
   @@unique([groupId, participantId])
 }

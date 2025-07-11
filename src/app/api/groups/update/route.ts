@@ -26,8 +26,17 @@ export async function POST(req: NextRequest) {
       where: { id: groupId },
     });
 
-    if (!group || group.createdById !== adminId) {
-      return NextResponse.json({ error: 'Group not found or unauthorized' }, { status: 404 });
+    if (!group) {
+      return NextResponse.json({ error: 'Group not found' }, { status: 404 });
+    }
+    const adminInfo = await prisma.user.findUnique({
+      where: {
+        id: adminId
+      }
+    })
+
+    if (group.createdById !== adminId || adminInfo?.role !== 'Admin') {
+      return NextResponse.json({ error: 'Unauthorized: You are not the creator of this group' }, { status: 403 });
     }
 
     // Build update payload
