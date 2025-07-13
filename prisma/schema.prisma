@@ -349,19 +349,23 @@ enum ParticipantStatus {
 }
 
 model Participant {
-  id               Int                @id @default(autoincrement())
-  name             String
-  email            String             @unique
-  password         String
-  mobileNumber     String             @unique
-  active           Boolean            @default(true)
-  createdById      Int?
-  createdBy        User?              @relation(fields: [createdById], references: [id])
-  responses        Response[]
-  results          Result[]
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  approved         Boolean            @default(false)
+  id             Int          @id @default(autoincrement())
+  name           String
+  email          String       @unique
+  password       String
+  mobileNumber   String       @unique
+  active         Boolean      @default(true)
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdById    Int?
+  createdBy      User?        @relation(fields: [createdById], references: [id])
+  updatedById    Int?         
+  responses      Response[]
+  results        Result[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  approved       Boolean      @default(false)
+  visibility     Boolean      @default(true)
   GroupParticipant GroupParticipant[]
 }
 
@@ -394,18 +398,19 @@ model User {
 }
 
 model Organization {
-  id          Int      @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   name        String
-  email       String   @unique
+  email       String        @unique
   phone       String
   address     String
   State       String
   Country     String
   CountryCode String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   User        User[]
   Group       Group[]
+  Participant Participant[]
 }
 
 model Category {
