@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
       password: string;
       organizationId: number;
       createdById: number;
+      approved: boolean;
     }[] = [];
 
     const emailPayload: {
@@ -89,6 +90,7 @@ export async function POST(req: NextRequest) {
         password,
         organizationId,
         createdById,
+        approved: true
       });
 
       emailPayload.push({

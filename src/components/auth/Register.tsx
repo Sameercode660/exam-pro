@@ -1,7 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/auth/AuthContext';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const Register: React.FC = () => {
   const { register } = useAuth();
@@ -10,11 +15,46 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
+  const [organizationId, setOrganizationId] = useState<number | null>(null);
+  const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const res = await axios.get(`/api/participants/fetch-all-orgs`);
+        setOrganizations(res.data.organizations);
+      } catch (err: any) {
+        toast.error(err.response?.data?.error || 'Failed to load organizations');
+      }
+    };
+
+    fetchOrganizations();
+  }, []);
 
   const handleRegister = async () => {
+    if (!name || !email || !password || !confirmPassword || !mobileNumber || !organizationId) {
+      toast.error('Please fill all the fields');
+      return;
+    }
+  
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
-    await register(name, email, password, mobileNumber);
+
+    const res = await register(name, email, password, mobileNumber, organizationId);
+
+    if (res.success) {
+      setShowModal(true); // Show Instagram style modal
+    } else {
+      toast.error(res.message);
+    }
+
     setLoading(false);
   };
 
@@ -22,91 +62,95 @@ const Register: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
         <h1 className="text-2xl font-bold text-gray-800 text-center mb-6">Create an Account</h1>
-        <form className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Full Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              placeholder="Enter your full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email Address
-            </label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
 
-            <div>
-            <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700">
-              Mobile Number
-            </label>
-            <input
-              id="mobileNumber"
-              type="number"
-              placeholder="Enter your mobile number"
-              value={mobileNumber}
-              onChange={(e) => setMobileNumber(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full border p-2 rounded-md"
+          />
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Create a password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          <input
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border p-2 rounded-md"
+          />
 
-               <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        
-          <button
-            type="button"
-            onClick={handleRegister}
-            className="w-full py-2 px-4 bg-blue-500 text-white font-medium text-sm rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <input
+            type="text"
+            placeholder="Mobile Number"
+            value={mobileNumber}
+            onChange={(e) => setMobileNumber(e.target.value)}
+            className="w-full border p-2 rounded-md"
+          />
+
+          <select
+            value={organizationId || ''}
+            onChange={(e) => setOrganizationId(Number(e.target.value))}
+            className="w-full border p-2 rounded-md"
           >
-            {loading ? 'Register': 'Loading...'}
+            <option value="">Select Organization</option>
+            {organizations.map((org: any) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border p-2 rounded-md"
+          />
+
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full border p-2 rounded-md"
+          />
+
+          <button
+            onClick={handleRegister}
+            disabled={loading}
+            className={`w-full py-2 px-4 rounded-md text-white font-medium transition cursor-pointer ${
+              loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
+            }`}
+          >
+            {loading ? 'Registering...' : 'Register'}
           </button>
-        </form>
+        </div>
+
         <p className="text-sm text-gray-500 mt-4 text-center">
           Already have an account?{' '}
           <a href="/login" className="text-blue-500 hover:underline">
             Log in
           </a>
         </p>
+        <ToastContainer position="top-center" />
       </div>
+
+      {/* Success Modal */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="text-center">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">🎉 Registration Successful!</DialogTitle>
+            <DialogDescription>
+              Your registration request has been submitted. You'll be notified once approved.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => (window.location.href = '/login')}>Go to Login</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

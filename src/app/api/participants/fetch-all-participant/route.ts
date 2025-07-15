@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     const whereClause: any = {
       organizationId,
       visibility: true,
+      approved: true
     };
 
     if (filter === "my") {

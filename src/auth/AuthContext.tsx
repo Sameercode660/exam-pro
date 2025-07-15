@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 interface AuthContextProps {
   user: any;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, mobileNumber: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  register: (name: string, email: string, password: string, mobileNumber: string, organizationId: number) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
 }
 
@@ -35,27 +35,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsInitialized(true); // Mark initialization as complete
   }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      const res = await axios.post('/api/authentication/user/login', { email, password });
-      const { token, participant } = res.data;
-      setToken(token);
-      setUser(participant);
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(participant));
-      router.push('/home');
-    } catch (error: any) {
-      console.error('Login failed', error.response?.data?.message || error.message);
-    }
-  };
+const login = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const res = await axios.post('/api/authentication/user/login', { email, password });
+    const { token, participant } = res.data;
 
-  const register = async (name: string, email: string, password: string, mobileNumber: string) => {
+    if (!participant.approved) {
+      return { success: false, message: "Your account is not approved yet." };
+    }
+
+    setToken(token);
+    setUser(participant);
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(participant));
+    router.push('/home');
+
+    return { success: true, message: "Login successful" };
+  } catch (error: any) {
+    const msg = error.response?.data?.message || "Login failed. Please try again.";
+    return { success: false, message: msg };
+  }
+};
+
+
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    mobileNumber: string,
+    organizationId: number
+  ): Promise<{ success: boolean; message: string }> => {
     try {
-      const res: any = await axios.post('/api/authentication/user/register', { name, email, password, mobileNumber });
-      alert(res.data.message);
-      router.push('/login');
+      await axios.post('/api/participants/create-participant', {
+        name, email, password, mobileNumber, organizationId
+      });
+
+      return { success: true, message: "Registration successful. You'll be notified after approval." };
+
     } catch (error: any) {
       console.error('Registration failed', error.response?.data?.message || error.message);
+
+      return {
+        success: false,
+        message: error.response?.data?.error || "Something went wrong! Please try again.",
+      };
     }
   };
 

@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-slot": "^1.2.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^6.4.17",
     "axios": "^1.10.0",
