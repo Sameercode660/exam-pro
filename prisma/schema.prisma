@@ -349,23 +349,23 @@ enum ParticipantStatus {
 }
 
 model Participant {
-  id             Int          @id @default(autoincrement())
-  name           String
-  email          String       @unique
-  password       String
-  mobileNumber   String       @unique
-  active         Boolean      @default(true)
-  organizationId Int
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  createdById    Int?
-  createdBy      User?        @relation(fields: [createdById], references: [id])
-  updatedById    Int?         
-  responses      Response[]
-  results        Result[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  approved       Boolean      @default(false)
-  visibility     Boolean      @default(true)
+  id               Int                @id @default(autoincrement())
+  name             String
+  email            String             @unique
+  password         String
+  mobileNumber     String             @unique
+  active           Boolean            @default(true)
+  organizationId   Int
+  organization     Organization       @relation(fields: [organizationId], references: [id])
+  createdById      Int?
+  createdBy        User?              @relation(fields: [createdById], references: [id])
+  updatedById      Int?
+  responses        Response[]
+  results          Result[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  approved         Boolean            @default(false)
+  visibility       Boolean            @default(true)
   GroupParticipant GroupParticipant[]
 }
 
@@ -395,6 +395,7 @@ model User {
   Group            Group[]
   GroupParticipant GroupParticipant[]
   Participant      Participant[]
+  GroupExam        GroupExam[]
 }
 
 model Organization {
@@ -497,6 +498,7 @@ model Exam {
   Result        Result[]
   IntResponse   IntResponse[]
   participants  ExamParticipant[]
+  GroupExam     GroupExam[]
 }
 
 model ExamParticipant {
@@ -565,6 +567,7 @@ model Group {
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
   visibility   Boolean            @default(true)
+  GroupExam    GroupExam[]
 }
 
 model GroupParticipant {
@@ -582,4 +585,19 @@ model GroupParticipant {
   visibility Boolean  @default(true)
 
   @@unique([groupId, participantId])
+}
+
+model GroupExam {
+  id         Int @id @default(autoincrement())
+  groupId    Int
+  examId     Int
+  assignedBy Int 
+
+  group Group @relation(fields: [groupId], references: [id])
+  exam  Exam  @relation(fields: [examId], references: [id])
+  admin User  @relation(fields: [assignedBy], references: [id])
+
+  assignedAt DateTime @default(now())
+
+  @@unique([groupId, examId])
 }
