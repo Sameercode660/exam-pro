@@ -4,6 +4,7 @@ import prisma from "@/utils/prisma";
 export async function POST(req: NextRequest) {
   try {
     const { search, filter, organizationId, adminId } = await req.json();
+    console.log(search, filter, organizationId, adminId)
 
     if (!organizationId) {
       return NextResponse.json({ error: "organizationId is required." }, { status: 400 });
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
         createdById: true,
       },
     });
-
+    console.log(participants)
     return NextResponse.json({ participants });
 
   } catch (err) {
