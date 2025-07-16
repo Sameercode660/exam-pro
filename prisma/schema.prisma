@@ -416,11 +416,13 @@ model Organization {
 
 model Category {
   id        Int        @id @default(autoincrement())
-  name      String     @unique
+  name      String
   adminId   Int?
   admin     User?      @relation(fields: [adminId], references: [id])
   questions Question[]
   topics    Topic[]
+
+  @@unique([name, adminId]) // Composite unique constraint
 }
 
 model Topic {
@@ -431,6 +433,8 @@ model Topic {
   category   Category   @relation(fields: [categoryId], references: [id])
   admin      User?      @relation(fields: [adminId], references: [id])
   Question   Question[]
+
+  @@unique([name, categoryId, adminId]) // Composite unique constraint
 }
 
 model Question {
@@ -476,12 +480,14 @@ model QuestionFrequency {
 }
 
 model Exam {
-  id               Int    @id @default(autoincrement())
+  id               Int       @id @default(autoincrement())
   title            String
   description      String
-  examCode         String @unique
+  examCode         String    @unique
   duration         Int
   status           String
+  startTime        DateTime? // Optional for unscheduled exams
+  endTime          DateTime?
   createdByAdminId Int
   updatedByAdminId Int
   createdById      Int
@@ -500,6 +506,7 @@ model Exam {
   participants  ExamParticipant[]
   GroupExam     GroupExam[]
 }
+
 
 model ExamParticipant {
   id        Int               @id @default(autoincrement())

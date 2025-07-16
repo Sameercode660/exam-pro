@@ -1,17 +1,18 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 
-
 export async function POST(req: NextRequest) {
   try {
-
-    const {adminId} = await req.json();
-    console.log(adminId)
+    const { adminId } = await req.json();
+    console.log(adminId);
 
     const exams = await prisma.exam.findMany({
       where: {
         createdByAdminId: adminId,
-        visibility: true
+        visibility: true,
+        status: {
+          in: ["Active", "Inactive", "Scheduled"],
+        },
       },
       include: {
         createdBy: true,

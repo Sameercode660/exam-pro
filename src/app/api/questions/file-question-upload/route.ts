@@ -3,25 +3,22 @@ import * as XLSX from "xlsx";
 import { Difficulty } from "@/generated/prisma";
 import prisma from "@/utils/prisma";
 
-
 export async function POST(req: NextRequest) {
   try {
     // Parse the form data to extract the file
-    
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
 
-    const {searchParams} = req.nextUrl;
-    const adminId = Number(searchParams.get('adminId'));
-    
-    console.log('adminId', adminId)
+    const { searchParams } = req.nextUrl;
+    const adminId = Number(searchParams.get("adminId"));
 
+    console.log("adminId", adminId);
 
-
-    if(!adminId) {
-      return NextResponse.json({error: "No admin is found"}, {status: 400});
+    if (!adminId) {
+      return NextResponse.json({ error: "No admin is found" }, { status: 400 });
     }
-    
+
     if (!file) {
       return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
     }
@@ -32,17 +29,15 @@ export async function POST(req: NextRequest) {
     const sheetName = workbook.SheetNames[0];
     const sheetData = XLSX.utils.sheet_to_json<any>(workbook.Sheets[sheetName]);
 
-    console.log('DataSheet', sheetData);
-    
+    console.log("DataSheet", sheetData);
 
     // filtering the data
     const filteredData = sheetData.filter(
       (row) =>
-        row.categoryName?.trim() && 
-      row.topicName?.trim() && 
-      row.question?.trim() 
+        row.categoryName?.trim() &&
+        row.topicName?.trim() &&
+        row.question?.trim()
     );
-
 
     for (const row of filteredData) {
       const {
@@ -60,24 +55,36 @@ export async function POST(req: NextRequest) {
       console.log(row);
 
       // Check or create the category
-      let category = await prisma.category.findUnique({
-        where: { name: categoryName },
+      const category = await prisma.category.upsert({
+        where: {
+          name_adminId: {
+            name: categoryName,
+            adminId: adminId,
+          },
+        },
+        update: {}, // no change if exists
+        create: {
+          name: categoryName,
+          adminId: adminId,
+        },
       });
-      if (!category) {
-        category = await prisma.category.create({
-          data: { name: categoryName, adminId },
-        });
-      }
 
       // Check or create the topic
-      let topic = await prisma.topic.findFirst({
-        where: { name: topicName, categoryId: category.id },
+      const topic = await prisma.topic.upsert({
+        where: {
+          name_categoryId_adminId: {
+            name: topicName,
+            categoryId: category.id,
+            adminId: adminId,
+          },
+        },
+        update: {},
+        create: {
+          name: topicName,
+          categoryId: category.id,
+          adminId: adminId,
+        },
       });
-      if (!topic) {
-        topic = await prisma.topic.create({
-          data: { name: topicName, categoryId: category.id, adminId },
-        });
-      }
 
       // Insert the question and options
       const createdQuestion = await prisma.question.create({
@@ -97,7 +104,6 @@ export async function POST(req: NextRequest) {
             ],
           },
         },
-
       });
 
       console.log(`Created Question ID: ${createdQuestion.id}`);

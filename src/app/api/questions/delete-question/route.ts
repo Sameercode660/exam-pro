@@ -5,34 +5,33 @@ export async function DELETE(req: NextRequest) {
   try {
     const { questionId, adminId } = await req.json();
 
-    // Validate input data
     if (!questionId || !adminId) {
       return NextResponse.json({
         statusCode: 400,
-        message: "questionId is required",
+        message: "questionId and adminId are required",
         status: false,
       });
     }
 
-    // Check if the question exists
-    const existingQuestion = await prisma.question.findUnique({
-      where: { id: questionId, adminId },
+    const existingQuestion = await prisma.question.findFirst({
+      where: {
+        id: questionId,
+        adminId: adminId,
+        visibility: true,
+      },
     });
 
     if (!existingQuestion) {
       return NextResponse.json({
-        statusCode: 400,
-        message: "Question does not exist",
+        statusCode: 404,
+        message: "Question does not exist or is already deleted",
         status: false,
       });
     }
 
-    // update the question
     await prisma.question.update({
       where: { id: questionId },
-      data: {
-        visibility: false
-      }
+      data: { visibility: false },
     });
 
     return NextResponse.json({
@@ -43,24 +42,10 @@ export async function DELETE(req: NextRequest) {
   } catch (error: unknown) {
     console.error("Error in DELETE request:", error);
 
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({
-        statusCode: 500,
-        message: "Invalid JSON format",
-        status: false,
-      });
-    } else if (error instanceof Error) {
-      return NextResponse.json({
-        statusCode: 500,
-        message: error.message,
-        status: false,
-      });
-    } else {
-      return NextResponse.json({
-        statusCode: 500,
-        message: "Something went wrong",
-        status: false,
-      });
-    }
+    return NextResponse.json({
+      statusCode: 500,
+      message: error instanceof Error ? error.message : "Something went wrong",
+      status: false,
+    });
   }
 }
