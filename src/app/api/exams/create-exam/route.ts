@@ -13,12 +13,10 @@ export async function POST(req: NextRequest) {
       createdByAdminId,
       duration,
       startTime,
-      endTime,
+      endTime, // This will be ignored for scheduled exams (auto-generated)
     } = body;
 
-    const now = new Date();
-
-    // Basic validations
+    // Basic Validation
     if (!title || !examCode || !createdByAdminId) {
       return NextResponse.json({
         statusCode: 400,
@@ -27,45 +25,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    let finalDuration = duration;
-    let finalStatus = status;
-
-    // Handle schedule mode safely
-    if (startTime && endTime && startTime !== '' && endTime !== '') {
-      const start = new Date(startTime);
-      const end = new Date(endTime);
-
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        return NextResponse.json({
-          statusCode: 400,
-          message: "Invalid date format",
-          status: false,
-        });
-      }
-
-      // if (start < now) {
-      //   return NextResponse.json({
-      //     statusCode: 400,
-      //     message: "Start time cannot be in the past",
-      //     status: false,
-      //   });
-      // }
-
-      if (end <= start) {
-        return NextResponse.json({
-          statusCode: 400,
-          message: "End time must be after start time",
-          status: false,
-        });
-      }
-
-      // Calculate duration in minutes
-      finalDuration = Math.floor((end.getTime() - start.getTime()) / 60000);
-      finalStatus = "Scheduled"; // Override status to Scheduled in schedule mode
-    }
-
-    // Validate duration
-    if (!finalDuration || finalDuration <= 0) {
+    if (!duration || duration <= 0) {
       return NextResponse.json({
         statusCode: 400,
         message: "Invalid duration",
@@ -73,16 +33,55 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Create the exam
+    let finalStatus = status;
+    let finalStartTime: Date | null = null;
+    let finalEndTime: Date | null = null;
+
+    // Scheduled Exam Logic
+    if (status === "Scheduled") {
+      if (!startTime) {
+        return NextResponse.json({
+          statusCode: 400,
+          message: "Start time is required for scheduled exams",
+          status: false,
+        });
+      }
+
+      finalStartTime = new Date(startTime);
+
+      if (isNaN(finalStartTime.getTime())) {
+        return NextResponse.json({
+          statusCode: 400,
+          message: "Invalid start time format",
+          status: false,
+        });
+      }
+
+      // Calculate endTime based on startTime + duration
+      finalEndTime = new Date(finalStartTime.getTime() + duration * 60000);
+
+      // Ensure endTime > startTime
+      if (finalEndTime <= finalStartTime) {
+        return NextResponse.json({
+          statusCode: 400,
+          message: "End time must be after start time",
+          status: false,
+        });
+      }
+
+      finalStatus = "Scheduled"; // Force override to avoid frontend mistakes
+    }
+
+    // Create Exam
     const newExam = await prisma.exam.create({
       data: {
         title,
-        description,
+        description: description || "",
         examCode,
-        duration: finalDuration,
+        duration,
         status: finalStatus,
-        startTime: startTime && startTime !== '' ? new Date(startTime) : null,
-        endTime: endTime && endTime !== '' ? new Date(endTime) : null,
+        startTime: finalStartTime,
+        endTime: finalEndTime,
         createdByAdminId,
         updatedByAdminId: createdByAdminId,
         createdById: createdByAdminId,

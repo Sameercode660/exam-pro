@@ -5,35 +5,46 @@ export async function POST(req: Request) {
   try {
     const { groupId, participantIds } = await req.json();
 
-    // existing participant IDs in the group
+    // Find participants already in the group, along with their names
     const existingGroupParticipants = await prisma.groupParticipant.findMany({
       where: {
         groupId,
         participantId: { in: participantIds },
       },
-      select: { participantId: true },
+      select: {
+        participantId: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
 
     const existingIds = existingGroupParticipants.map(p => p.participantId);
 
-    //  out participants who are already in the group
+    // Filter new participants
     const newParticipants = participantIds.filter((id: number) => !existingIds.includes(id));
 
-    //  insert for better performance
+    // Batch insert new participants
     if (newParticipants.length > 0) {
       await prisma.groupParticipant.createMany({
         data: newParticipants.map((id: number) => ({
           groupId,
           participantId: id,
         })),
-        skipDuplicates: true, // Additional safety (optional, since filtering is done)
+        skipDuplicates: true, // Extra safety
       });
     }
 
+    // Extract skipped participant names
+    const skippedParticipantNames = existingGroupParticipants.map(p => p.user.name);
+
     return NextResponse.json({
-      message: 'Participants added to group',
+      message: 'Participants processed',
       addedCount: newParticipants.length,
-      skippedCount: existingIds.length,
+      skippedCount: skippedParticipantNames.length,
+      skippedParticipants: skippedParticipantNames, // Array of names
     });
 
   } catch (error) {

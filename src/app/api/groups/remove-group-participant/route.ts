@@ -28,12 +28,15 @@ export async function POST(req: Request) {
       );
     }
 
-    await prisma.groupParticipant.delete({
+    await prisma.groupParticipant.update({
       where: {
         groupId_participantId: {
           groupId,
           participantId,
         },
+      },
+      data: {
+        visibility: false,
       },
     });
 

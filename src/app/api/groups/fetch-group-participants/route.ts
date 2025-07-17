@@ -13,6 +13,7 @@ export async function POST(req: Request) {
       where: {
         groupId,
         isActive: true,
+        visibility: true
       },
       include: {
         user: {
