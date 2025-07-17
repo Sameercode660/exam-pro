@@ -606,5 +606,7 @@ model GroupExam {
 
   assignedAt DateTime @default(now())
 
+  visibility Boolean  @default(true)
+
   @@unique([groupId, examId])
 }
