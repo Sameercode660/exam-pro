@@ -39,6 +39,7 @@ const login = async (email: string, password: string): Promise<{ success: boolea
   try {
     const res = await axios.post('/api/authentication/user/login', { email, password });
     const { token, participant } = res.data;
+    console.log(res.data)
 
     if (!participant.approved) {
       return { success: false, message: "Your account is not approved yet." };

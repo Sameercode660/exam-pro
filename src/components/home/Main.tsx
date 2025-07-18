@@ -2,6 +2,8 @@
 
 import { useLayout } from '@/app/contexts/LayoutContext';
 import React, { useState } from 'react';
+import { useAuth } from '@/auth/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface HomeProps {
   children: React.ReactNode;
@@ -9,11 +11,13 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = ({ children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const {title} = useLayout();
+  const { title } = useLayout();
+  const { logout } = useAuth()
+  const router = useRouter();
 
   return (
     <div className="flex h-screen w-screen bg-gray-100 overflow-hidden">
-      
+
       {/* Drawer Sidebar */}
       <aside
         className={`
@@ -25,7 +29,7 @@ const Home: React.FC<HomeProps> = ({ children }) => {
       >
         <div className="p-5 flex justify-between items-center border-b">
           <div className="text-2xl font-bold">ExamPro</div>
-          <button 
+          <button
             className="md:hidden text-xl"
             onClick={() => setDrawerOpen(false)}
           >
@@ -33,20 +37,37 @@ const Home: React.FC<HomeProps> = ({ children }) => {
           </button>
         </div>
         <nav className="flex flex-col p-4 space-y-4 items-start">
-          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer">Dashboard</button>
-          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer">Attempted Exam</button>
-          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer">My Groups</button>
-          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer">Results</button>
-          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer">Logout</button>
+          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer"
+            onClick={() => {
+              router.push('/home')
+            }}>Dashboard</button>
+          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer"
+            onClick={() => {
+              router.push('/home/attempted-exams')
+            }}
+          >Attempted Exam</button>
+          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer"
+            onClick={() => {
+              router.push('/home/my-groups')
+            }}
+          >My Groups</button>
+          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer"
+            onClick={() => {
+              router.push('/home/results')
+            }}
+          >Results</button>
+          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer" onClick={() => {
+            logout();
+          }}>Logout</button>
         </nav>
       </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        
+
         {/* Header */}
         <header className="flex justify-between items-center bg-white shadow-md px-6 py-4">
-          <button 
+          <button
             className="md:hidden text-2xl"
             onClick={() => setDrawerOpen(true)}
           >
@@ -67,7 +88,7 @@ const Home: React.FC<HomeProps> = ({ children }) => {
 
       {/* Overlay for mobile when drawer is open */}
       {drawerOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
           onClick={() => setDrawerOpen(false)}
         />
