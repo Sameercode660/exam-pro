@@ -9,22 +9,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "groupId is required." }, { status: 400 });
     }
 
-    const addedExams = await prisma.groupExam.findMany({
+    const removedExams = await prisma.groupExam.findMany({
       where: {
         groupId,
-        visibility: true,
-        exam: {
-          visibility: true
-        }
+        visibility: false,
       },
       include: {
         exam: true,
+        group: true,
+        admin: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        assignedAt: 'desc',
       },
     });
 
-    return NextResponse.json({ addedExams });
+    return NextResponse.json({ removedExams });
+
   } catch (err: any) {
-    console.error("FetchAddedExams Error:", err);
+    console.error("FetchRemovedExams Error:", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

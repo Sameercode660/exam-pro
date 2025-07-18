@@ -3,11 +3,11 @@ import prisma from "@/utils/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { organizationId, adminId, filter, search } = await req.json();
+    const { organizationId, adminId, filter, search, groupId } = await req.json();
 
-    if (!organizationId || !adminId || !filter) {
+    if (!organizationId || !adminId || !filter || !groupId) {
       return NextResponse.json(
-        { error: "organizationId, adminId, and filter are required." },
+        { error: "organizationId, adminId, groupId, and filter are required." },
         { status: 400 }
       );
     }
@@ -23,24 +23,19 @@ export async function POST(req: Request) {
       const adminMap = Object.fromEntries(admins.map((admin) => [admin.id, admin.name]));
       const adminIds = admins.map((admin) => admin.id);
 
-      const whereClause = search
-        ? {
-            OR: [
-              {
-                createdByAdminId: { in: adminIds },
-                title: { contains: search, mode: "insensitive" as const },
-              },
-              {
-                createdByAdminId: { in: adminIds },
-                description: { contains: search, mode: "insensitive" as const },
-              },
-            ],
-          }
-        : {
-            createdByAdminId: { in: adminIds },
-          };
+      const whereClause: any = {
+        createdByAdminId: { in: adminIds },
+        visibility: true,
+      };
 
-      exams = await prisma.exam.findMany({
+      if (search) {
+        whereClause.OR = [
+          { title: { contains: search, mode: "insensitive" as const } },
+          { description: { contains: search, mode: "insensitive" as const } },
+        ];
+      }
+
+      const rawExams = await prisma.exam.findMany({
         where: whereClause,
         select: {
           id: true,
@@ -48,48 +43,83 @@ export async function POST(req: Request) {
           description: true,
           createdAt: true,
           createdByAdminId: true,
+          GroupExam: {
+            where: { groupId },
+            select: {
+              id: true,
+              visibility: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
       });
 
-      exams = exams.map((exam) => ({
-        ...exam,
-        createdBy: adminMap[exam.createdByAdminId] || "Unknown",
-      }));
+      exams = rawExams.map((exam) => {
+        const groupExam = exam.GroupExam[0]; // Only one possible per group
+        let status = "not_added";
+
+        if (groupExam) {
+          status = groupExam.visibility ? "added" : "removed";
+        }
+
+        return {
+          id: exam.id,
+          title: exam.title,
+          description: exam.description,
+          createdAt: exam.createdAt,
+          createdBy: adminMap[exam.createdByAdminId] || "Unknown",
+          status,
+        };
+      });
 
     } else if (filter === "my") {
-      const whereClause = search
-        ? {
-            OR: [
-              {
-                createdByAdminId: adminId,
-                title: { contains: search, mode: "insensitive" as const },
-              },
-              {
-                createdByAdminId: adminId,
-                description: { contains: search, mode: "insensitive" as const },
-              },
-            ],
-          }
-        : {
-            createdByAdminId: adminId,
-          };
+      const whereClause: any = {
+        createdByAdminId: adminId,
+        visibility: true,
+      };
 
-      exams = await prisma.exam.findMany({
+      if (search) {
+        whereClause.OR = [
+          { title: { contains: search, mode: "insensitive" as const } },
+          { description: { contains: search, mode: "insensitive" as const } },
+        ];
+      }
+
+      const rawExams = await prisma.exam.findMany({
         where: whereClause,
         select: {
           id: true,
           title: true,
           description: true,
           createdAt: true,
+          GroupExam: {
+            where: { groupId },
+            select: {
+              id: true,
+              visibility: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
       });
 
-      exams = exams.map((exam) => ({
-        ...exam,
-        createdBy: "Me",
-      }));
+      exams = rawExams.map((exam) => {
+        const groupExam = exam.GroupExam[0];
+        let status = "not_added";
+
+        if (groupExam) {
+          status = groupExam.visibility ? "added" : "removed";
+        }
+
+        return {
+          id: exam.id,
+          title: exam.title,
+          description: exam.description,
+          createdAt: exam.createdAt,
+          createdBy: "Me",
+          status,
+        };
+      });
 
     } else {
       return NextResponse.json({ error: "Invalid filter." }, { status: 400 });
