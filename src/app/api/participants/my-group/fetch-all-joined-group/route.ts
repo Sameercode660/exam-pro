@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 import { z } from "zod";
 
-// Input validation schema
 const fetchGroupSchema = z.object({
   participantId: z.number(),
 });
@@ -14,14 +13,14 @@ export async function POST(req: NextRequest) {
     const parseResult = fetchGroupSchema.safeParse(body);
     if (!parseResult.success) {
       return NextResponse.json(
-        { message: "Invalid participantId" },
+        { message: "Invalid input. participantId is required." },
         { status: 400 }
       );
     }
 
     const { participantId } = parseResult.data;
 
-    // Check if participant is visible
+    // Check participant visibility
     const participant = await prisma.participant.findUnique({
       where: { id: participantId },
     });
@@ -33,22 +32,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch the groups participant has joined
+    // Fetch all groups participant has joined
     const groups = await prisma.groupParticipant.findMany({
       where: {
         participantId,
         isActive: true,
+        group: {
+          visibility: true
+        }
       },
       include: {
         group: {
           include: {
-            createdBy: true, // Get admin who created the group
+            createdBy: true,
           },
         },
       },
     });
 
+    if (groups.length === 0) {
+      return NextResponse.json(
+        { message: "No groups found." },
+        { status: 404 }
+      );
+    }
+
     const groupData = groups.map((gp) => ({
+      groupId: gp.group.id,                     // ✅ Return groupId
       groupName: gp.group.name,
       description: gp.group.description || "No description provided.",
       specialInstruction: gp.group.description || "No special instructions.",

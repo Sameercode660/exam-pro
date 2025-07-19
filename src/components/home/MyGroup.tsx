@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react'
 import { useLayout } from '@/app/contexts/LayoutContext';
+import GroupList from './my-group/GroupList';
 
 function MyGroup() {
 
@@ -11,9 +12,9 @@ function MyGroup() {
         setTitle("My Groups")
     }, []);
     return (
-        <div>
-            My groups
-        </div>
+        <>
+            <GroupList></GroupList>
+        </>
     )
 }
 

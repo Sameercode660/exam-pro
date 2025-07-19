@@ -1,0 +1,247 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/auth/AuthContext";
+import axios from "axios";
+import { Loader2, User, ClipboardList, KeyRound } from "lucide-react";
+import { toast } from "react-toastify";
+
+interface Participant {
+    participantId: number;
+    name: string;
+    email: string;
+}
+
+interface Exam {
+    examId: number;
+    title: string;
+    status: string; // Active | Scheduled
+    examCode: string;
+    startTime: string | null;
+}
+
+interface GroupInfo {
+    groupId: number;
+    name: string;
+    description: string;
+    createdAt: string;
+    createdBy: string;
+}
+
+function GroupDetails() {
+    const { groupId } = useParams();
+    const { user } = useAuth();
+    const router = useRouter();
+    const participantId = user.id;
+
+    const [group, setGroup] = useState<GroupInfo | null>(null);
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [exams, setExams] = useState<Exam[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchGroupData = async () => {
+            try {
+                const res = await axios.post("/api/participants/my-group/fetch-group-details", {
+                    participantId,
+                    groupId: Number(groupId),
+                });
+
+                setGroup(res.data.group);
+                setParticipants(res.data.participants);
+                setExams(res.data.exams);
+            } catch (err: any) {
+                toast.error(err.response?.data?.message || "Failed to fetch group data");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (groupId && participantId) {
+            fetchGroupData();
+        }
+    }, [groupId, participantId]);
+
+    const handleAttempt = (examId: number, code: string, actualCode: string) => {
+        if (code !== actualCode) {
+            toast.error("Invalid Exam Code");
+            return;
+        }
+        router.push(`/exam/${examId}`);
+    };
+
+    const convertToActive = async (examId: number) => {
+        try {
+            await axios.post("/api/participants/my-group/exam/activate-exam", { examId });
+
+            setExams((prev) =>
+                prev.map((exam) =>
+                    exam.examId === examId ? { ...exam, status: "Active" } : exam
+                )
+            );
+            toast.success("Exam is now active!");
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to activate exam.");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-[300px]">
+                <Loader2 className="animate-spin w-10 h-10 text-blue-500" />
+            </div>
+        );
+    }
+
+    if (!group) {
+        return (
+            <div className="text-center text-gray-500 text-xl mt-10">
+                No group data available.
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-w-5xl mx-auto p-6">
+            <h1 className="text-3xl font-bold mb-4 text-gray-800">{group.name}</h1>
+
+            <div className="bg-white shadow-md rounded-xl p-6 mb-8 border border-gray-200">
+                <p className="text-gray-600 mb-2">
+                    <span className="font-semibold">Description:</span> {group.description}
+                </p>
+                <p className="text-gray-600 mb-2">
+                    <span className="font-semibold">Created By:</span> {group.createdBy}
+                </p>
+                <p className="text-gray-600">
+                    <span className="font-semibold">Created At:</span> {new Date(group.createdAt).toLocaleDateString()}
+                </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+                {/* Participants */}
+                <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-4 border">
+                    <h2 className="text-xl font-semibold mb-3 flex items-center text-blue-500">
+                        <User className="mr-2" /> Participants
+                    </h2>
+                    <ul className="space-y-2 text-gray-700">
+                        {participants.map((p) => (
+                            <li key={p.participantId} className="border-b pb-2">
+                                {p.name} ({p.email})
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {/* Exams */}
+                <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-4 border">
+                    <h2 className="text-xl font-semibold mb-3 flex items-center text-green-500">
+                        <ClipboardList className="mr-2" /> Exams
+                    </h2>
+
+                    <ul className="space-y-3 text-gray-700 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+                        {exams.map((exam) => (
+                            <li key={exam.examId} className="flex flex-col gap-2 border-b pb-4">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p className="font-medium">{exam.title}</p>
+                                        <p className="text-sm text-gray-500">Code: {exam.examCode}</p>
+                                    </div>
+                                    <span
+                                        className={`px-3 py-1 rounded-full text-sm ${exam.status === "Active"
+                                            ? "bg-green-100 text-green-600"
+                                            : "bg-yellow-100 text-yellow-600"
+                                            }`}
+                                    >
+                                        {exam.status}
+                                    </span>
+                                </div>
+
+                                {exam.status === "Active" ? (
+                                    <button
+                                        onClick={() => {
+                                            const userCode = prompt("Enter Exam Code:");
+                                            if (userCode !== null) {
+                                                handleAttempt(exam.examId, userCode, exam.examCode);
+                                            }
+                                        }}
+                                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center gap-2 transition"
+                                    >
+                                        <KeyRound size={18} />
+                                        Attempt
+                                    </button>
+                                ) : exam.status === "Scheduled" ? (
+                                    <CountdownTimer
+                                        startTime={exam.startTime}
+                                        onTimeUp={() => convertToActive(exam.examId)}
+                                    />
+                                ) : (
+                                    <div className="text-sm text-blue-600 bg-blue-100 px-3 py-1 rounded-full w-fit">
+                                        Completed
+                                    </div>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    );
+}
+
+export default GroupDetails;
+
+// Countdown Timer Component
+interface TimerProps {
+    startTime: string | null;
+    onTimeUp: () => void;
+}
+
+const CountdownTimer: React.FC<TimerProps> = ({ startTime, onTimeUp }) => {
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+
+    useEffect(() => {
+        if (!startTime) return;
+
+        const target = new Date(startTime).getTime();
+        const now = new Date().getTime();
+
+        if (target <= now) {
+            // Time is already up, directly activate
+            onTimeUp();
+            return;
+        }
+
+        const interval = setInterval(() => {
+            const currentTime = new Date().getTime();
+            const diff = target - currentTime;
+
+            if (diff <= 0) {
+                clearInterval(interval);
+                onTimeUp();
+            } else {
+                setTimeLeft(diff);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [startTime, onTimeUp]);
+
+    const formatTime = (ms: number) => {
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+
+        return `${hours}:${minutes}:${seconds}`;
+    };
+
+    if (timeLeft <= 0) return null;
+
+    return (
+        <div className="text-sm text-gray-600">
+            Starts in: <span className="font-mono">{formatTime(timeLeft)}</span>
+        </div>
+    );
+};
