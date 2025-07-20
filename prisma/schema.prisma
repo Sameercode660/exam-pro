@@ -299,3 +299,12 @@ model GroupExam {
 
   @@unique([groupId, examId])
 }
+
+model ScheduledExamBuffer {
+  id         Int      @id @default(autoincrement())
+  examId     Int      @unique
+  startTime  DateTime
+  endTime    DateTime
+  createdAt  DateTime @default(now())
+  processed  Boolean  @default(false)  // To track if it's already pushed to QStash
+}

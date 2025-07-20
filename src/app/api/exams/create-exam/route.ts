@@ -13,7 +13,6 @@ export async function POST(req: NextRequest) {
       createdByAdminId,
       duration,
       startTime,
-      endTime, // This will be ignored for scheduled exams (auto-generated)
     } = body;
 
     // Basic Validation
@@ -37,7 +36,7 @@ export async function POST(req: NextRequest) {
     let finalStartTime: Date | null = null;
     let finalEndTime: Date | null = null;
 
-    // Scheduled Exam Logic
+    // Logic based on status
     if (status === "Scheduled") {
       if (!startTime) {
         return NextResponse.json({
@@ -57,10 +56,8 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Calculate endTime based on startTime + duration
       finalEndTime = new Date(finalStartTime.getTime() + duration * 60000);
 
-      // Ensure endTime > startTime
       if (finalEndTime <= finalStartTime) {
         return NextResponse.json({
           statusCode: 400,
@@ -69,7 +66,19 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      finalStatus = "Scheduled"; // Force override to avoid frontend mistakes
+      finalStatus = "Scheduled"; // Force it just in case
+
+    } else if (status === "Active") {
+      // For Active exam: start now, end after duration
+      finalStartTime = new Date();
+      finalEndTime = new Date(finalStartTime.getTime() + duration * 60000);
+      finalStatus = "Active";
+
+    } else if (status === "Inactive") {
+      // For Inactive: only store duration, times are null
+      finalStartTime = null;
+      finalEndTime = null;
+      finalStatus = "Inactive";
     }
 
     // Create Exam
@@ -94,6 +103,7 @@ export async function POST(req: NextRequest) {
       response: newExam,
       status: true,
     });
+
   } catch (error: any) {
     console.error("Error in create-exam API:", error);
 

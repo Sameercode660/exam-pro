@@ -3,7 +3,18 @@ import prisma from "@/utils/prisma";
 
 export async function PUT(req: NextRequest) {
   try {
-    const { id, adminId, title, description, examCode, duration, status, startTime, endTime, updatedByAdminId } = await req.json();
+    const {
+      id,
+      adminId,
+      title,
+      description,
+      examCode,
+      duration,
+      status,
+      startTime,
+      endTime,
+      updatedByAdminId,
+    } = await req.json();
 
     if (!id || !adminId) {
       return NextResponse.json({
@@ -34,11 +45,11 @@ export async function PUT(req: NextRequest) {
       updatedByAdminId,
     };
 
-    if (status === 'Scheduled') {
+    if (status === "Scheduled") {
       if (!startTime || !endTime) {
         return NextResponse.json({
           statusCode: 400,
-          message: "StartTime and EndTime are required for Scheduled status",
+          message: "StartTime and EndTime are required for Scheduled exams",
           status: false,
         });
       }
@@ -56,8 +67,12 @@ export async function PUT(req: NextRequest) {
 
       updateData.startTime = start;
       updateData.endTime = end;
-    } else {
-      // If switching to Active/Inactive, clear scheduling fields
+
+    } else if (status === "Active") {
+      const now = new Date();
+      updateData.startTime = now;
+      updateData.endTime = new Date(now.getTime() + duration * 60000);
+    } else if (status === "Inactive") {
       updateData.startTime = null;
       updateData.endTime = null;
     }
@@ -73,6 +88,7 @@ export async function PUT(req: NextRequest) {
       response: updatedExam,
       status: true,
     });
+
   } catch (error: unknown) {
     console.error("Error in PUT request:", error);
 

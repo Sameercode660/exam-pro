@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
+import prisma from "@/utils/prisma";
 import { qstash } from "@/utils/qstash";
 
 export async function POST(req: Request) {
   try {
     const { examId, startTime, endTime } = await req.json();
-
-    console.log("StartTime:", startTime);
-    console.log("EndTime:", endTime);
 
     const startTimeMs = new Date(startTime).getTime();
     const endTimeMs = new Date(endTime).getTime();
@@ -20,18 +18,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid endTime" }, { status: 400 });
     }
 
-    const delayToStart = Math.floor((startTimeMs - now) / 1000); // Convert ms to seconds
-    const delayToEnd = Math.floor((endTimeMs - now) / 1000);     // Convert ms to seconds
+    const delayToStart = Math.floor((startTimeMs - now) / 1000);
+    const delayToEnd = Math.floor((endTimeMs - now) / 1000);
 
-    // Check QStash limit (max 7 days)
     const MAX_QSTASH_DELAY = 604800; // 7 days in seconds
 
-    if (delayToStart > MAX_QSTASH_DELAY) {
-      return NextResponse.json({ error: "Start time exceeds 7 day limit." }, { status: 400 });
-    }
+    // If exceeds 7-day limit, store in buffer
+    if (delayToStart > MAX_QSTASH_DELAY || delayToEnd > MAX_QSTASH_DELAY) {
+      await prisma.scheduledExamBuffer.upsert({
+        where: { examId },
+        update: {
+          startTime: new Date(startTime),
+          endTime: new Date(endTime),
+          processed: false,
+        },
+        create: {
+          examId,
+          startTime: new Date(startTime),
+          endTime: new Date(endTime),
+        },
+      });
 
-    if (delayToEnd > MAX_QSTASH_DELAY) {
-      return NextResponse.json({ error: "End time exceeds 7 day limit." }, { status: 400 });
+      return NextResponse.json({
+        message: "Exam exceeds added to buffer for later processing.",
+        status: "buffered",
+      });
     }
 
     // Activate Exam at startTime
@@ -50,6 +61,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       message: "Exam activation and completion scheduled successfully.",
+      status: "scheduled",
     });
 
   } catch (err: any) {

@@ -1,0 +1,6 @@
+{
+  "watch": ["server.ts"],
+  "ext": "ts",
+  "ignore": ["node_modules"],
+  "exec": "npx ts-node -P tsconfig.server.json -r tsconfig-paths/register server.ts"
+}

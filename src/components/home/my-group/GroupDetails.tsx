@@ -6,6 +6,10 @@ import { useAuth } from "@/auth/AuthContext";
 import axios from "axios";
 import { Loader2, User, ClipboardList, KeyRound } from "lucide-react";
 import { toast } from "react-toastify";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
 
 interface Participant {
     participantId: number;
@@ -16,7 +20,7 @@ interface Participant {
 interface Exam {
     examId: number;
     title: string;
-    status: string; // Active | Scheduled
+    status: string;
     examCode: string;
     startTime: string | null;
 }
@@ -39,6 +43,12 @@ function GroupDetails() {
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [exams, setExams] = useState<Exam[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Modal State
+    const [examCodeInput, setExamCodeInput] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
+
 
     useEffect(() => {
         const fetchGroupData = async () => {
@@ -63,12 +73,19 @@ function GroupDetails() {
         }
     }, [groupId, participantId]);
 
-    const handleAttempt = (examId: number, code: string, actualCode: string) => {
-        if (code !== actualCode) {
+    const handleAttempt = (exam: Exam) => {
+        setSelectedExam(exam);
+        setExamCodeInput("");
+        setIsModalOpen(true);
+    };
+
+    const handleSubmitExamCode = () => {
+        if (examCodeInput !== selectedExam?.examCode) {
             toast.error("Invalid Exam Code");
             return;
         }
-        router.push(`/exam/${examId}`);
+        router.push(`/exam/${selectedExam.examId}`);
+        setIsModalOpen(false);
     };
 
     const convertToActive = async (examId: number) => {
@@ -119,7 +136,6 @@ function GroupDetails() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-                {/* Participants */}
                 <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-4 border">
                     <h2 className="text-xl font-semibold mb-3 flex items-center text-blue-500">
                         <User className="mr-2" /> Participants
@@ -133,7 +149,6 @@ function GroupDetails() {
                     </ul>
                 </div>
 
-                {/* Exams */}
                 <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-4 border">
                     <h2 className="text-xl font-semibold mb-3 flex items-center text-green-500">
                         <ClipboardList className="mr-2" /> Exams
@@ -150,7 +165,9 @@ function GroupDetails() {
                                     <span
                                         className={`px-3 py-1 rounded-full text-sm ${exam.status === "Active"
                                             ? "bg-green-100 text-green-600"
-                                            : "bg-yellow-100 text-yellow-600"
+                                            : exam.status === "Scheduled"
+                                                ? "bg-yellow-100 text-yellow-600"
+                                                : "bg-blue-100 text-blue-600"
                                             }`}
                                     >
                                         {exam.status}
@@ -159,12 +176,7 @@ function GroupDetails() {
 
                                 {exam.status === "Active" ? (
                                     <button
-                                        onClick={() => {
-                                            const userCode = prompt("Enter Exam Code:");
-                                            if (userCode !== null) {
-                                                handleAttempt(exam.examId, userCode, exam.examCode);
-                                            }
-                                        }}
+                                        onClick={() => handleAttempt(exam)}
                                         className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center gap-2 transition"
                                     >
                                         <KeyRound size={18} />
@@ -184,13 +196,35 @@ function GroupDetails() {
                         ))}
                     </ul>
                 </div>
-
             </div>
+
+            {/* Exam Code Modal */}
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Enter Exam Code</DialogTitle>
+                    </DialogHeader>
+
+                    <Input
+                        placeholder="Enter exam code"
+                        value={examCodeInput}
+                        onChange={(e:React.ChangeEvent<HTMLInputElement>) => setExamCodeInput(e.target.value)}
+                    />
+
+                    <DialogFooter className="mt-4">
+                        <Button onClick={() => {
+                            router.push(`/home/my-groups/${groupId}/${examCodeInput}`)
+                        }}>Start Exam</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     );
 }
 
 export default GroupDetails;
+
 
 // Countdown Timer Component
 interface TimerProps {
