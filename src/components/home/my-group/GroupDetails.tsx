@@ -176,7 +176,9 @@ function GroupDetails() {
 
                                 {exam.status === "Active" ? (
                                     <button
-                                        onClick={() => handleAttempt(exam)}
+                                        onClick={() => {
+                                            router.push(`/home/my-groups/${groupId}/${exam.examId}`)
+                                        }}
                                         className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center gap-2 transition"
                                     >
                                         <KeyRound size={18} />
@@ -199,7 +201,7 @@ function GroupDetails() {
             </div>
 
             {/* Exam Code Modal */}
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            {/* <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Enter Exam Code</DialogTitle>
@@ -217,7 +219,7 @@ function GroupDetails() {
                         }}>Start Exam</Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog> */}
 
         </div>
     );

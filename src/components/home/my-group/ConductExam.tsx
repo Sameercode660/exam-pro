@@ -28,8 +28,10 @@ interface Exam {
 }
 
 const ConductExam: React.FC = () => {
-  const { examId } = useParams();
+  const { examId, groupId } = useParams();
+  console.log(examId)
   const router = useRouter();
+  const { user } = useAuth();
 
   const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -37,19 +39,25 @@ const ConductExam: React.FC = () => {
   const [currentQ, setCurrentQ] = useState(0);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const {user} = useAuth();
+
   const userId = user.id;
-  const {examCode} = useParams();
 
   // Fetch exam details
   useEffect(() => {
     const fetchExam = async () => {
       try {
-        const res = await axios.post("/api/participants/my-group/exam/conduct", { examCode });
+        const res = await axios.post("/api/participants/my-group/exam/conduct", { examId: Number(examId) });
 
-        setExam(res.data.exam);
+        console.log(res.data)
+        const examData: Exam = {
+          examId: res.data.examId,
+          title: res.data.title,
+          duration: res.data.duration,
+        };
+
+        setExam(examData);
         setQuestions(res.data.questions);
-        setTimeLeft(res.data.exam.duration * 60); // convert minutes to seconds
+        setTimeLeft(res.data.duration * 60);
       } catch (err: any) {
         toast.error(err.response?.data?.message || "Failed to fetch exam");
       } finally {
@@ -62,7 +70,7 @@ const ConductExam: React.FC = () => {
 
   // Timer logic
   useEffect(() => {
-    if (timeLeft <= 0) {
+    if (timeLeft <= 0 && exam) {
       handleSubmit();
       return;
     }
@@ -78,14 +86,14 @@ const ConductExam: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      await axios.post("/api/participants/my-group/exam/submit", {
+      await axios.post("http://localhost:3000/api/participants/my-group/exam/submit", {
         examId,
         userId,
         answers,
       });
 
       toast.success("Exam submitted successfully!");
-      router.push("/exam/thank-you");
+      router.push(`/home/my-groups/`);
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Submission failed");
     }
@@ -140,9 +148,9 @@ const ConductExam: React.FC = () => {
                 onClick={() => handleOptionSelect(currentQuestion.id, idx + 1)}
                 className={`w-full text-left px-4 py-3 rounded-xl border transition 
                 ${answers[currentQuestion.id] === idx + 1
-                    ? "bg-blue-500 text-white border-blue-600"
-                    : "bg-white hover:bg-gray-100"
-                  }`}
+                  ? "bg-blue-500 text-white border-blue-600"
+                  : "bg-white hover:bg-gray-100"
+                }`}
               >
                 {opt.text}
               </button>
@@ -170,7 +178,7 @@ const ConductExam: React.FC = () => {
             </Button>
           </div>
 
-          {(isHalfAttempted || isHalfTime) && (
+          {(isHalfAttempted || isHalfTime || currentQ === questions.length - 1) && (
             <Button
               onClick={handleSubmit}
               className="w-full mt-6 bg-green-500 hover:bg-green-600 text-white flex items-center gap-2 transition"

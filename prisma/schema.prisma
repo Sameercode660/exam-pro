@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -185,17 +184,17 @@ model Exam {
   updatedAt  DateTime @updatedAt
   visibility Boolean  @default(true)
 
-  createdBy     User              @relation("AdminCreatedExam", fields: [createdByAdminId], references: [id])
-  updatedBy     User              @relation("AdminUpdatedExam", fields: [updatedByAdminId], references: [id])
-  createdByUser User              @relation(fields: [createdById], references: [id])
-  questions     Question[]
-  Response      Response[]
-  Result        Result[]
-  IntResponse   IntResponse[]
-  participants  ExamParticipant[]
-  GroupExam     GroupExam[]
+  createdBy           User                 @relation("AdminCreatedExam", fields: [createdByAdminId], references: [id])
+  updatedBy           User                 @relation("AdminUpdatedExam", fields: [updatedByAdminId], references: [id])
+  createdByUser       User                 @relation(fields: [createdById], references: [id])
+  questions           Question[]
+  Response            Response[]
+  Result              Result[]
+  IntResponse         IntResponse[]
+  participants        ExamParticipant[]
+  GroupExam           GroupExam[]
+  ScheduledExamBuffer ScheduledExamBuffer?
 }
-
 
 model ExamParticipant {
   id        Int               @id @default(autoincrement())
@@ -243,6 +242,8 @@ model Result {
   createdAt DateTime    @default(now())
   user      Participant @relation(fields: [userId], references: [id])
   exam      Exam        @relation(fields: [examId], references: [id])
+
+  @@unique([userId, examId])
 }
 
 model Group {
@@ -287,7 +288,7 @@ model GroupExam {
   id         Int @id @default(autoincrement())
   groupId    Int
   examId     Int
-  assignedBy Int 
+  assignedBy Int
 
   group Group @relation(fields: [groupId], references: [id])
   exam  Exam  @relation(fields: [examId], references: [id])
@@ -295,16 +296,17 @@ model GroupExam {
 
   assignedAt DateTime @default(now())
 
-  visibility Boolean  @default(true)
+  visibility Boolean @default(true)
 
   @@unique([groupId, examId])
 }
 
 model ScheduledExamBuffer {
-  id         Int      @id @default(autoincrement())
-  examId     Int      @unique
-  startTime  DateTime
-  endTime    DateTime
-  createdAt  DateTime @default(now())
-  processed  Boolean  @default(false)  // To track if it's already pushed to QStash
+  id        Int      @id @default(autoincrement())
+  examId    Int      @unique
+  exam      Exam     @relation(fields: [examId], references: [id])
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+  processed Boolean  @default(false) // To track if it's already pushed to QStash
 }
