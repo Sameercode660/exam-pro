@@ -1,6 +1,7 @@
 'use client'
 import { useLayout } from '@/app/contexts/LayoutContext';
 import React, { useEffect } from 'react'
+import DashboardPage from './dashboard/DashboardPage';
 
 function Dashboard() {
 
@@ -11,9 +12,9 @@ function Dashboard() {
         setTitle("Dashboard")
     }, []);
     return (
-        <div>
-            this is Dashboard
-        </div>
+        <>
+         <DashboardPage></DashboardPage>   
+        </>
     )
 }
 

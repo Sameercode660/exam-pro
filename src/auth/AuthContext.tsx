@@ -4,6 +4,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
+
 interface AuthContextProps {
   user: any;
   token: string | null;
@@ -20,9 +21,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isInitialized, setIsInitialized] = useState(false); // Initialization flag
   const router = useRouter();
 
+
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
+
+
+
     if (storedToken) setToken(storedToken);
     if (storedUser) {
       try {
@@ -35,28 +40,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsInitialized(true); // Mark initialization as complete
   }, []);
 
-const login = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
-  try {
-    const res = await axios.post('/api/authentication/user/login', { email, password });
-    const { token, participant } = res.data;
-    console.log(res.data)
+  const login = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await axios.post('/api/authentication/user/login', { email, password });
+      const { token, participant } = res.data;
+      console.log(res.data)
 
-    if (!participant.approved) {
-      return { success: false, message: "Your account is not approved yet." };
+      if (!participant.approved) {
+        return { success: false, message: "Your account is not approved yet." };
+      }
+
+      setToken(token);
+      setUser(participant);
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(participant));
+      router.push('/home');
+
+      return { success: true, message: "Login successful" };
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Login failed. Please try again.";
+      return { success: false, message: msg };
     }
-
-    setToken(token);
-    setUser(participant);
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(participant));
-    router.push('/home');
-
-    return { success: true, message: "Login successful" };
-  } catch (error: any) {
-    const msg = error.response?.data?.message || "Login failed. Please try again.";
-    return { success: false, message: msg };
-  }
-};
+  };
 
 
   const register = async (

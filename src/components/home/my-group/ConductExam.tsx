@@ -93,7 +93,7 @@ const ConductExam: React.FC = () => {
       });
 
       toast.success("Exam submitted successfully!");
-      router.push(`/home/my-groups/`);
+      router.push(`/home/my-groups/result/${examId}`);
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Submission failed");
     }

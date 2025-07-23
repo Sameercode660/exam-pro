@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     }
     // Fetch the exam details including timing and questions
     const exam = await prisma.exam.findUnique({
-      where: { id: parsedExamId },
+      where: { id: parsedExamId, visibility: true },
       include: {
         questions: {
           select: {
@@ -35,6 +35,13 @@ export async function POST(req: Request) {
 
     if (!exam) {
       return NextResponse.json({ error: "Exam not found" }, { status: 404 });
+    }
+
+    if (exam.status == "Completed") {
+      return NextResponse.json(
+        { error: "Exam is already completed" },
+        { status: 400 }
+      );
     }
 
     // Use startTime and endTime directly from DB

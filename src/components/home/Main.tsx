@@ -43,11 +43,6 @@ const Home: React.FC<HomeProps> = ({ children }) => {
             }}>Dashboard</button>
           <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer"
             onClick={() => {
-              router.push('/home/attempted-exams')
-            }}
-          >Attempted Exam</button>
-          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer"
-            onClick={() => {
               router.push('/home/my-groups')
             }}
           >My Groups</button>

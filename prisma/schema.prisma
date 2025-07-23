@@ -84,6 +84,7 @@ model User {
   GroupParticipant GroupParticipant[]
   Participant      Participant[]
   GroupExam        GroupExam[]
+  UserTacking      UserTacking[]
 }
 
 model Organization {
@@ -309,4 +310,13 @@ model ScheduledExamBuffer {
   endTime   DateTime
   createdAt DateTime @default(now())
   processed Boolean  @default(false) // To track if it's already pushed to QStash
+}
+
+model UserTacking {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  loginTime  DateTime
+  logoutTime DateTime
+  spentTime  DateTime
 }

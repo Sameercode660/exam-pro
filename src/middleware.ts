@@ -35,7 +35,7 @@ export function middleware(req: NextRequest) {
   const token = req.cookies.get('token')?.value;
 
   // Paths that require authentication
-  const authPaths = ['/protected-route'];
+  const authPaths = ['/home'];
   const isAuthPath = authPaths.some((path) => req.nextUrl.pathname.startsWith(path));
 
   if (isAuthPath) {

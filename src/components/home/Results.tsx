@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react'
 import { useLayout } from '@/app/contexts/LayoutContext';
+import ResultList from './results/ResultList';
 
 function Results() {
 
@@ -11,9 +12,9 @@ function Results() {
         setTitle("Resutls")
     }, []);
     return (
-        <div>
-            Results
-        </div>
+        <>
+            <ResultList></ResultList>
+        </>
     )
 }
 

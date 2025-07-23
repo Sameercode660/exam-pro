@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSocket } from "@/context/SocketContext";
 
 
 interface Participant {
@@ -49,6 +50,9 @@ function GroupDetails() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
 
+    // socket instance
+    const socket = useSocket();
+
 
     useEffect(() => {
         const fetchGroupData = async () => {
@@ -71,6 +75,44 @@ function GroupDetails() {
         if (groupId && participantId) {
             fetchGroupData();
         }
+        if (socket) {
+            socket.on("exam-added", () => {
+                fetchGroupData();
+            });
+
+            socket.on('remove-exam', () => {
+                fetchGroupData();
+            })
+
+            socket.on('restore-exam', () => {
+                fetchGroupData();
+            })
+            socket.on('add-participant', () => {
+                fetchGroupData();
+            })
+            socket.on('remove-participant', () => {
+                fetchGroupData();
+            })
+            socket.on('restore-participant', () => {
+                fetchGroupData();
+            })
+            socket.on('update-exam-status', () => {
+                fetchGroupData();
+            })
+        }
+
+
+        return () => {
+            if (socket) {
+                socket.off("exam-added");
+                socket.off("remove-exam");
+                socket.off("restore-exam");
+                socket.off("add-participant");
+                socket.off("remove-participant");
+                socket.off("restore-participant");
+                socket.off("update-exam-status");
+            }
+        };
     }, [groupId, participantId]);
 
     const handleAttempt = (exam: Exam) => {
@@ -190,9 +232,9 @@ function GroupDetails() {
                                         onTimeUp={() => convertToActive(exam.examId)}
                                     />
                                 ) : (
-                                    <div className="text-sm text-blue-600 bg-blue-100 px-3 py-1 rounded-full w-fit">
-                                        Completed
-                                    </div>
+                                    <>
+
+                                    </>
                                 )}
                             </li>
                         ))}

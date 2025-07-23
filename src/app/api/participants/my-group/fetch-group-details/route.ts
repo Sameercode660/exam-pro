@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     // Fetch exams assigned to group
     const groupExams = await prisma.groupExam.findMany({
-      where: { groupId },
+      where: { groupId, visibility: true },
       include: {
         exam: true,
       },
