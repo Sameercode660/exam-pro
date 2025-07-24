@@ -37,24 +37,25 @@ enum ParticipantStatus {
 }
 
 model Participant {
-  id               Int                @id @default(autoincrement())
-  name             String
-  email            String             @unique
-  password         String
-  mobileNumber     String             @unique
-  active           Boolean            @default(true)
-  organizationId   Int
-  organization     Organization       @relation(fields: [organizationId], references: [id])
-  createdById      Int?
-  createdBy        User?              @relation(fields: [createdById], references: [id])
-  updatedById      Int?
-  responses        Response[]
-  results          Result[]
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  approved         Boolean            @default(false)
-  visibility       Boolean            @default(true)
-  GroupParticipant GroupParticipant[]
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  email               String                @unique
+  password            String
+  mobileNumber        String                @unique
+  active              Boolean               @default(true)
+  organizationId      Int
+  organization        Organization          @relation(fields: [organizationId], references: [id])
+  createdById         Int?
+  createdBy           User?                 @relation(fields: [createdById], references: [id])
+  updatedById         Int?
+  responses           Response[]
+  results             Result[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  approved            Boolean               @default(false)
+  visibility          Boolean               @default(true)
+  GroupParticipant    GroupParticipant[]
+  ParticipantTracking ParticipantTracking[]
 }
 
 model User {
@@ -84,7 +85,6 @@ model User {
   GroupParticipant GroupParticipant[]
   Participant      Participant[]
   GroupExam        GroupExam[]
-  UserTacking      UserTacking[]
 }
 
 model Organization {
@@ -261,11 +261,12 @@ model Group {
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  participants GroupParticipant[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  visibility   Boolean            @default(true)
-  GroupExam    GroupExam[]
+  participants         GroupParticipant[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  visibility           Boolean               @default(true)
+  GroupExam            GroupExam[]
+  ScheduledGroupBuffer ScheduledGroupBuffer?
 }
 
 model GroupParticipant {
@@ -312,11 +313,21 @@ model ScheduledExamBuffer {
   processed Boolean  @default(false) // To track if it's already pushed to QStash
 }
 
-model UserTacking {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id])
-  loginTime  DateTime
-  logoutTime DateTime
-  spentTime  DateTime
+model ScheduledGroupBuffer {
+  id        Int      @id @default(autoincrement())
+  groupId   Int      @unique
+  group     Group    @relation(fields: [groupId], references: [id])
+  endDate   DateTime
+  createdAt DateTime @default(now())
+  processed Boolean  @default(false) // To track if it's already pushed to QStash
+}
+
+model ParticipantTracking {
+  id            Int         @id @default(autoincrement())
+  participantId Int
+  participant   Participant @relation(fields: [participantId], references: [id])
+  loginTime     DateTime
+  logoutTime    DateTime
+  spentTime     Int
+  createdAt     DateTime    @default(now())
 }

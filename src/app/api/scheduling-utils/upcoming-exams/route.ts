@@ -20,6 +20,18 @@ export async function GET() {
       },
     });
 
+    const examIds = upcomingExams.map((exam) => exam.examId);
+
+    if (examIds.length > 0) {
+      await prisma.scheduledExamBuffer.updateMany({
+        where: {
+          id: { in: examIds},
+        },
+        data: {
+          processed: true,
+        },
+      });
+    }
     return NextResponse.json({
       statusCode: 200,
       message: "Fetched upcoming exams from buffer successfully",

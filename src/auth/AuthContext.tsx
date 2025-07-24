@@ -3,6 +3,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { useSocket } from '@/context/SocketContext';
 
 
 interface AuthContextProps {
@@ -20,6 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false); // Initialization flag
   const router = useRouter();
+  const socket = useSocket()
 
 
   useEffect(() => {
@@ -49,6 +51,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!participant.approved) {
         return { success: false, message: "Your account is not approved yet." };
       }
+
+      socket?.emit('user-online', { participantId: res.data.participant.id })
 
       setToken(token);
       setUser(participant);
@@ -88,12 +92,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login');
+  const logout = async () => {
+    try {
+      const storedUser = user || JSON.parse(localStorage.getItem('user') || '{}');
+
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+
+      if (storedUser?.id) {
+        await axios.post('/api/participant-activity-tracking/participant-logout-time', {
+          participantId: storedUser.id
+        });
+      } else {
+        console.warn('No valid user ID found for logout tracking');
+      }
+    } catch (err) {
+      console.error('Error tracking logout time:', err);
+    } finally {
+      router.push('/login');
+    }
+
   };
 
   return (
