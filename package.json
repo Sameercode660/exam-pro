@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "prisma generate && prisma migrate deploy && next build",
+    "start": "ts-node -P tsconfig.server.json server.ts",
     "lint": "next lint",
     "server": "ts-node -P tsconfig.server.json server.ts",
-    "dev:server": "nodemon"
+    "dev:server": "nodemon",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
