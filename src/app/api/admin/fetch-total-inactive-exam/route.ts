@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse} from "next/server";
 import prisma from "@/utils/prisma";
 
 
@@ -25,5 +25,5 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return Response.json({ data: inactiveExams });
+  return NextResponse.json({ data: inactiveExams });
 }

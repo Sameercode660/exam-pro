@@ -19,6 +19,11 @@ export async function POST(request: NextRequest) {
       name: true,
       email: true,
       createdAt: true,
+      createdBy: {
+        select: {
+          name: true
+        }
+      }
     },
   });
 
