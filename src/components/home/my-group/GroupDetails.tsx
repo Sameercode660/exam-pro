@@ -5,10 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/auth/AuthContext";
 import axios from "axios";
 import { Loader2, User, ClipboardList, KeyRound } from "lucide-react";
-import { toast } from "react-toastify";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useSocket } from "@/context/SocketContext";
 
 
@@ -262,7 +260,7 @@ function GroupDetails() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog> */}
-
+        <ToastContainer position="top-center"></ToastContainer>
         </div>
     );
 }

@@ -6,7 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Clock, SendHorizonal } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "@/auth/AuthContext";
 
@@ -86,7 +86,7 @@ const ConductExam: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      await axios.post("http://localhost:3000/api/participants/my-group/exam/submit", {
+      await axios.post("/api/participants/my-group/exam/submit", {
         examId,
         userId,
         answers,
@@ -189,6 +189,7 @@ const ConductExam: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <ToastContainer position="top-center"></ToastContainer>
     </div>
   );
 };

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
         participantId,
         loginTime: new Date(),
         logoutTime: new Date(),  
-        spentTime: new Date(),   
+        spentTime: 0,   
       },
     });
 

@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-const allowedOrigins = ['*']; // You can specify allowed origins if needed.
+const allowedOrigins = ['*'];  
 const corsOptions = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',

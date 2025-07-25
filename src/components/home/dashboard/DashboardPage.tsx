@@ -1,4 +1,4 @@
-// app/(dashboard)/page.tsx or wherever your dashboard page is
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

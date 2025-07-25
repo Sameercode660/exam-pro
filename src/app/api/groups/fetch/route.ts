@@ -1,4 +1,4 @@
-// POST /api/super-admin/groups
+ 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 

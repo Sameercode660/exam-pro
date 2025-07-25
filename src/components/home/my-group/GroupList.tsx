@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Loader2, Users } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "@/auth/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -100,6 +101,7 @@ const GroupList: React.FC = () => {
           </p>
         </div>
       ))}
+      <ToastContainer position="top-center"></ToastContainer>
     </div>
   );
 };
