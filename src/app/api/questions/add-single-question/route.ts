@@ -18,19 +18,6 @@ export async function POST(req: NextRequest) {
       adminId,
     } = await req.json();
 
-    console.log(
-      categoryName,
-      topicName,
-      text,
-      option1,
-      option2,
-      option3,
-      option4,
-      correctOption,
-      difficultyLevel,
-      adminId
-    );
-
     if (
       !categoryName ||
       !topicName ||
@@ -50,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check or create the category
-    let category = await prisma.category.findUnique({
+    let category = await prisma.category.findFirst({
       where: { name: categoryName },
     });
 
