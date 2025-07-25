@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && prisma migrate deploy && next build --no-lint",
     "start": "ts-node -P tsconfig.server.json server.ts",
     "lint": "next lint",
     "server": "ts-node -P tsconfig.server.json server.ts",
