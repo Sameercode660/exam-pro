@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     // Perform soft delete (visibility = false)
     const updatedGroup = await prisma.group.update({
       where: { id: groupId },
-      data: { visibility: false },
+      data: { visibility: false, updatedById: requesterId },
     });
 
     return NextResponse.json({

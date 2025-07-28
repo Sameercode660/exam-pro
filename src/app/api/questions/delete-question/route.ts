@@ -31,7 +31,7 @@ export async function DELETE(req: NextRequest) {
 
     await prisma.question.update({
       where: { id: questionId },
-      data: { visibility: false },
+      data: { visibility: false, updatedBy: adminId },
     });
 
     return NextResponse.json({

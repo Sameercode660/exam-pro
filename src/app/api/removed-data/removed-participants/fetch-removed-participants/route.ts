@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
             name: true,
           },
         },
+        updatedAt: true
       },
     });
 
@@ -52,8 +53,10 @@ export async function POST(request: NextRequest) {
       name: p.name,
       mobileNumber: p.mobileNumber,
       createdAt: p.createdAt,
+      removedAt: p.updatedAt,
       createdBy: p.createdBy?.name ?? "self",
       removedBy: p.updatedBy?.name ?? null,
+
     }));
 
     return NextResponse.json({ data: result });

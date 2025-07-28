@@ -4,14 +4,14 @@ import prisma from "@/utils/prisma";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { participantId } = body;
+    const { participantId, adminId } = body;
 
     if (!participantId) {
       return NextResponse.json({ success: false, message: "Participant ID is required" }, { status: 400 });
     }
 
     const participant = await prisma.participant.update({
-      where: { id: participantId },
+      where: { id: participantId, updatedById: adminId },
       data: { visibility: true },
     });
 

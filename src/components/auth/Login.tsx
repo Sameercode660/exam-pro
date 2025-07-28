@@ -4,12 +4,14 @@ import React, { useState } from 'react';
 import { useAuth } from '@/auth/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useRouter } from 'next/navigation';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -60,7 +62,7 @@ const Login: React.FC = () => {
 
         <p className="text-sm text-gray-500 mt-6 text-center">
           Don&apos;t have an account?{' '}
-          <a href="/" className="text-blue-500 hover:underline">Register</a>
+          <span onClick={() => {router.push('/register')}} className="text-blue-500 hover:underline cursor-pointer">Register</span>
         </p>
 
         <p className="text-sm text-blue-500 mt-4 text-center hover:underline cursor-pointer">

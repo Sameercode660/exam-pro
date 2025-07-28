@@ -3,7 +3,7 @@ import prisma from "@/utils/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { participantId } = await req.json();
+    const { participantId, adminId } = await req.json();
 
     if (!participantId) {
       return NextResponse.json({ error: "participantId is required." }, { status: 400 });
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     // Update visibility to false (soft delete)
     await prisma.participant.update({
       where: { id: participantId },
-      data: { visibility: false },
+      data: { visibility: false, updatedById: adminId},
     });
 
     return NextResponse.json({ message: "Participant deleted (visibility set to false)." });

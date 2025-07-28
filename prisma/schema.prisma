@@ -90,6 +90,10 @@ model User {
   GroupExam           GroupExam[]
   createdParticipants Participant[]      @relation("CreatedBy")
   updatedParticipants Participant[]      @relation("UpdatedBy")
+  questionsCreated    Question[]         @relation("CreatedBy")
+  questionsUpdated    Question[]         @relation("UpdatedBy")
+  groupCreated        Group[]            @relation("UpdatedBy")
+  groupUpdated        Group[]            @relation("CreatedBy")
 }
 
 model Organization {
@@ -147,11 +151,14 @@ model Question {
   category          Category           @relation(fields: [categoryId], references: [id])
   topic             Topic              @relation(fields: [topicId], references: [id])
   options           Option[]
-  admin             User?              @relation(fields: [adminId], references: [id])
+  admin             User?              @relation("CreatedBy", fields: [adminId], references: [id])
+  updatedByAdmin    User?              @relation("UpdatedBy", fields: [updatedBy], references: [id])
   responses         Response[]
   Exam              Exam?              @relation(fields: [examId], references: [id])
   QuestionFrequency QuestionFrequency?
   IntResponse       IntResponse[]
+  User              User?              @relation(fields: [userId], references: [id])
+  userId            Int?
 }
 
 model Option {
@@ -261,7 +268,9 @@ model Group {
   isActive    Boolean  @default(true)
 
   createdById Int
-  createdBy   User @relation(fields: [createdById], references: [id])
+  createdBy   User  @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedById Int?
+  updatedBy   User? @relation("UpdatedBy", fields: [updatedById], references: [id])
 
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id])
@@ -272,6 +281,8 @@ model Group {
   visibility           Boolean               @default(true)
   GroupExam            GroupExam[]
   ScheduledGroupBuffer ScheduledGroupBuffer?
+  User                 User?                 @relation(fields: [userId], references: [id])
+  userId               Int?
 }
 
 model GroupParticipant {

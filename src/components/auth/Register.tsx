@@ -7,6 +7,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+
 
 const Register: React.FC = () => {
   const { register } = useAuth();
@@ -19,6 +21,8 @@ const Register: React.FC = () => {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchOrganizations = async () => {
@@ -38,7 +42,7 @@ const Register: React.FC = () => {
       toast.error('Please fill all the fields');
       return;
     }
-  
+
 
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
@@ -120,9 +124,8 @@ const Register: React.FC = () => {
           <button
             onClick={handleRegister}
             disabled={loading}
-            className={`w-full py-2 px-4 rounded-md text-white font-medium transition cursor-pointer ${
-              loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
-            }`}
+            className={`w-full py-2 px-4 rounded-md text-white font-medium transition cursor-pointer ${loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
+              }`}
           >
             {loading ? 'Registering...' : 'Register'}
           </button>
@@ -130,9 +133,9 @@ const Register: React.FC = () => {
 
         <p className="text-sm text-gray-500 mt-4 text-center">
           Already have an account?{' '}
-          <a href="/login" className="text-blue-500 hover:underline">
+          <span onClick={() => router.push('/')} className="text-blue-500 hover:underline cursor-pointer">
             Log in
-          </a>
+          </span>
         </p>
         <ToastContainer position="top-center" />
       </div>
@@ -147,7 +150,7 @@ const Register: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={() => (window.location.href = '/login')}>Go to Login</Button>
+            <Button onClick={() => router.push('/')}>Go to Login</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

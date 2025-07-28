@@ -10,9 +10,6 @@ export async function POST(req: NextRequest) {
       where: {
         createdByAdminId: adminId,
         visibility: true,
-        status: {
-          in: ["Active", "Inactive", "Scheduled", "Completed"],
-        },
       },
       include: {
         createdBy: true,

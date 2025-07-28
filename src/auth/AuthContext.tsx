@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
       if (storedUser?.id) {
-        await axios.post('/api/participant-activity-tracking/participant-logout-time', {
+        axios.post('/api/participant-activity-tracking/participant-logout-time', {
           participantId: storedUser.id
         });
       } else {
@@ -112,7 +112,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       console.error('Error tracking logout time:', err);
     } finally {
-      router.push('/login');
+      setTimeout(() => {
+        router.push('/');
+      }, 0);
     }
 
   };
