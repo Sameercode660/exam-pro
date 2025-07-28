@@ -65,7 +65,9 @@ const Login: React.FC = () => {
           <span onClick={() => {router.push('/register')}} className="text-blue-500 hover:underline cursor-pointer">Register</span>
         </p>
 
-        <p className="text-sm text-blue-500 mt-4 text-center hover:underline cursor-pointer">
+        <p className="text-sm text-blue-500 mt-4 text-center hover:underline cursor-pointer" onClick={() => {
+          router.push('/forgot-password')
+        }}>
           Forgot Password?
         </p>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/auth/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -8,12 +8,18 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const { user, token, isInitialized } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (isInitialized && (!token || !user)) {
+      router.push('/login');
+    }
+  }, [isInitialized, token, user, router]);
+
   if (!isInitialized) {
-    return <div>Loading...</div>; // Wait for initialization
+    return <div>Loading...</div>; 
   }
 
+   
   if (!token || !user) {
-    router.push('/login');
     return null;
   }
 
