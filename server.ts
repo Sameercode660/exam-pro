@@ -9,7 +9,7 @@ const hostname = "localhost";
 // const port = parseInt(process.env.PORT || "3000", 10);
 const port = Number(process.env.PORT) || 3000;
 // const app = next({ dev, hostname, port });
- const app = next({ dev, port });
+const app = next({ dev, port });
 
 // const app = next({ dev });
 const handler = app.getRequestHandler();
@@ -141,7 +141,9 @@ app.prepare().then(() => {
 
         if (sessionId && loginTime) {
           const logoutTime = new Date();
-          const spentTime = Math.floor((logoutTime.getTime() - new Date(loginTime).getTime())/1000);
+          const spentTime = Math.floor(
+            (logoutTime.getTime() - new Date(loginTime).getTime()) / 1000
+          );
           try {
             await prisma.participantTracking.update({
               where: { id: sessionId },
@@ -171,7 +173,7 @@ app.prepare().then(() => {
       console.error(err);
       process.exit(1);
     })
-    .listen(port, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
+    .listen(process.env.PORT || 3000, () => {
+      console.log(`Server ready on port ${process.env.PORT || 3000}`);
     });
 });
