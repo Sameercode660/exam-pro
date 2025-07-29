@@ -6,10 +6,11 @@ import prisma from "@/utils/prisma";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
-const port = Number(process.env.PORT) || 3000;
-const app = next({ dev, hostname, port });
+const port = parseInt(process.env.PORT || "3000", 10);
+// const port = Number(process.env.PORT) || 3000;
+// const app = next({ dev, hostname, port });
+ const app = next({ dev, port });
 
-// const port = parseInt(process.env.PORT || "3000", 10);
 // const app = next({ dev });
 const handler = app.getRequestHandler();
 

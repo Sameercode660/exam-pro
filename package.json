@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build --no-lint",
-    "start": "NODE_OPTIONS='--max-old-space-size=2048' ts-node -r tsconfig-paths/register -P tsconfig.server.json server.ts",
+    "build": "prisma generate && prisma migrate deploy && tsc -p tsconfig.server.json && next build --no-lint",
+    "start": "NODE_OPTIONS='--max-old-space-size=2048' node dist-server/server.js",
     "lint": "next lint",
     "server": "ts-node -P tsconfig.server.json server.ts",
     "dev:server": "nodemon",
