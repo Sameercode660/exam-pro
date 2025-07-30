@@ -1,5 +1,17 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
+import { Difficulty } from "@/generated/prisma";
+
+type RequestTypes = {
+   questionId: number;
+      text: string;
+      categoryName: string;
+      topicName: string;
+      difficulty: string
+      correctOption: number
+      options: []
+      adminId: number
+}
 
 export async function PUT(req: NextRequest) {
   try {
@@ -13,7 +25,7 @@ export async function PUT(req: NextRequest) {
       correctOption,
       options,
       adminId,
-    } = body;
+    }: RequestTypes = body;
 
     // Validate input
     if (!questionId || !text || !categoryName || !topicName || !difficulty || !correctOption || !options || !adminId) {
@@ -76,7 +88,7 @@ export async function PUT(req: NextRequest) {
         text,
         categoryId: category.id,
         topicId: topic.id,
-        difficulty,
+        difficulty: difficulty as Difficulty,
         correctOption,
         options: {
           deleteMany: {}, // Remove old options

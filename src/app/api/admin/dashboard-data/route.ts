@@ -2,9 +2,13 @@ import { NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 import { RoleEnum } from "@/generated/prisma";
 
+type RequestTypes = {
+  organizationId: number
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body: RequestTypes = await req.json();
     const { organizationId } = body;
 
     if (!organizationId) {

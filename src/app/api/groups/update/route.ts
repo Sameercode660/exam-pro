@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+type RequestTypes = {
+   groupId: number;
+      adminId: number;
+      name: string;
+      description: string;
+      startDate: string;
+      endDate: string;
+      isActive: boolean
+}
+
 export async function POST(req: NextRequest) {
   try {
     const {
@@ -11,7 +21,7 @@ export async function POST(req: NextRequest) {
       startDate,
       endDate,
       isActive,
-    } = await req.json();
+    }: RequestTypes = await req.json();
 
     // Validation
     if (!groupId || typeof groupId !== 'number') {

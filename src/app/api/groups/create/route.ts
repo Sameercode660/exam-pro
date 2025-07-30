@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  name: string;
+  description: string;
+  endDate: string;
+  createdById: number;
+  organizationId: number;
+};
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body: RequestTypes = await req.json();
 
     const { name, description, endDate, createdById, organizationId } = body;
 
@@ -23,20 +31,19 @@ export async function POST(req: NextRequest) {
       where: {
         name: {
           equals: name,
-          mode: "insensitive",  
+          mode: "insensitive",
         },
         organizationId: organizationId,
         createdById: createdById,
       },
     });
 
-    if(duplicateCheck) {
+    if (duplicateCheck) {
       return NextResponse.json(
-        {error: "Group Already exists"},
-        {status: 400}
-      )
+        { error: "Group Already exists" },
+        { status: 400 }
+      );
     }
-
 
     const start = new Date();
     const end = new Date(endDate);

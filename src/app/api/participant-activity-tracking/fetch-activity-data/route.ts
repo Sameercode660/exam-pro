@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { startOfDay, endOfDay } from "date-fns";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  search: string;
+  fromDate: string;
+  toDate: string;
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { search = "", fromDate, toDate } = body;
+  const { search = "", fromDate, toDate }: RequestTypes = body;
 
   try {
     const userActivities = await prisma.participantTracking.findMany({

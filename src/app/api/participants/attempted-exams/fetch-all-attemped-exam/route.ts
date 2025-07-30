@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  userId: number;
+}
+
 export async function POST(req: Request) {
   try {
-    const { userId } = await req.json();
+    const { userId }: RequestTypes = await req.json();
     const parsedUserId = Number(userId);
 
     if (!parsedUserId || isNaN(parsedUserId)) {

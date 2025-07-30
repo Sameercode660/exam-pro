@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  categoryId: number;
+  adminId: number;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { categoryId, adminId } = await req.json();
+    const { categoryId, adminId }: RequestTypes = await req.json();
 
     if (!categoryId || !adminId) {
       return NextResponse.json({ error: "Category ID and Admin ID are required" }, { status: 400 });
@@ -13,8 +18,8 @@ export async function POST(req: NextRequest) {
 
     const topics = await prisma.topic.findMany({
       where: {
-          adminId: parseInt(adminId), // Ensures topic belongs to the same admin
-          categoryId: parseInt(categoryId),
+          adminId, 
+          categoryId
       },
       select: {
         id: true,

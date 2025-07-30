@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  groupExamId: number;
+}
+
 export async function POST(req: Request) {
   try {
-    const { groupExamId } = await req.json();
+    const { groupExamId }: RequestTypes = await req.json();
 
     if (!groupExamId) {
       return NextResponse.json({ error: "groupExamId is required." }, { status: 400 });

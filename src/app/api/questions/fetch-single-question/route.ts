@@ -1,11 +1,16 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  questionId: number;
+  adminId: number;
+}
+
 export async function POST(req: NextRequest) {
   try {
 
     // fetching question id 
-    const {questionId, adminId} = await req.json();
+    const {questionId, adminId}: RequestTypes = await req.json();
 
     // checking the questionId availability
     if(!questionId || !adminId) {

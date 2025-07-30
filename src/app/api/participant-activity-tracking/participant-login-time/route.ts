@@ -2,9 +2,13 @@
 import { NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  participantId: number;
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { participantId } = body;
+  const { participantId }: RequestTypes = body;
 
   try {
     const entry = await prisma.participantTracking.create({

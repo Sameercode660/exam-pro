@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { qstash } from "@/utils/qstash";
 
+type RequestTypes = {
+  examId: number;
+  endTime: string;
+}
+
 export async function POST(req: Request) {
   try {
-    const { examId, endTime } = await req.json();
+    const { examId, endTime }: RequestTypes = await req.json();
 
     console.log("EndTime:", endTime);
 

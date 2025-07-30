@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 import { qstash } from "@/utils/qstash";
 
+type RequestTypes = {
+  examId: number; startTime: string; endTime: string;
+}
+
 export async function POST(req: Request) {
   try {
     const { examId, startTime, endTime } = await req.json();

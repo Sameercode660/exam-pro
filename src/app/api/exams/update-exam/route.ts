@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
+import { number } from "zod";
+
+type RequestTypes = {
+  id: number;
+  adminId: number;
+  title: string;
+  description: string;
+  examCode: string;
+  duration: number;
+  status: string;
+  startTime: string;
+  endTime: string;
+  updatedByAdminId: number;
+};
 
 export async function PUT(req: NextRequest) {
   try {
@@ -14,7 +28,7 @@ export async function PUT(req: NextRequest) {
       startTime,
       endTime,
       updatedByAdminId,
-    } = await req.json();
+    }: RequestTypes = await req.json();
 
     if (!id || !adminId) {
       return NextResponse.json({
@@ -67,7 +81,6 @@ export async function PUT(req: NextRequest) {
 
       updateData.startTime = start;
       updateData.endTime = end;
-
     } else if (status === "Active") {
       const now = new Date();
       updateData.startTime = now;
@@ -88,7 +101,6 @@ export async function PUT(req: NextRequest) {
       response: updatedExam,
       status: true,
     });
-
   } catch (error: unknown) {
     console.error("Error in PUT request:", error);
 

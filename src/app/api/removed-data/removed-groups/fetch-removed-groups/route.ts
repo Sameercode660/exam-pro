@@ -2,9 +2,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  organizationId: number
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { organizationId } = await req.json();
+    const { organizationId }: RequestTypes = await req.json();
 
     const removedGroups = await prisma.group.findMany({
       where: {

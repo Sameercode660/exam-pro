@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 import { qstash } from "@/utils/qstash";
 
+type RequestTypes = {
+  groupId: number;
+  endDate: string
+}
+
 export async function POST(req: Request) {
   try {
-    const { groupId, endDate } = await req.json();
+    const { groupId, endDate }: RequestTypes = await req.json();
 
     if (!groupId || !endDate) {
       return NextResponse.json({ error: "Missing groupId or endDate" }, { status: 400 });

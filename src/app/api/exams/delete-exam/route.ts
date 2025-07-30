@@ -2,11 +2,15 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  examId: number;
+  adminId: number;
+}
 
 export async function POST(req: NextRequest) {
   try {
     
-    const {examId, adminId} = await req.json();
+    const {examId, adminId}: RequestTypes = await req.json();
 
     if (!examId) {
       return NextResponse.json({
@@ -17,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     const deletedExam = await prisma.exam.update({
-      where: { id: parseInt(examId), createdByAdminId: adminId },
+      where: { id: adminId, createdByAdminId: adminId },
       data: {
         visibility: false
       }

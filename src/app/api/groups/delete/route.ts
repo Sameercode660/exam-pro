@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+type RequestTypes = {
+  groupId: number;
+  requesterId: number
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { groupId, requesterId } = await req.json();
+    const { groupId, requesterId }: RequestTypes = await req.json();
 
     // Validate input
     if (!groupId || typeof groupId !== 'number') {

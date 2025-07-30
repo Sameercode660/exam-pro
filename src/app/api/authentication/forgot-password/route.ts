@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 import nodemailer from "nodemailer";
 
+type RequestTypes = {
+  email: string;
+}
+
+
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const { email }: RequestTypes = await req.json();
 
     
     if (!email || typeof email !== "string") {

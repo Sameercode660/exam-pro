@@ -1,9 +1,19 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  title: string;
+  description: string;
+  examCode: string;
+  status: string;
+  createdByAdminId: number;
+  duration: number;
+  startTime: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body: RequestTypes = await req.json();
 
     const {
       title,

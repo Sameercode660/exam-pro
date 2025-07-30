@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+type RequestTypes = {
+  search: string;
+}
+
+
 export async function POST(req: NextRequest) {
   try {
-    const { search } = await req.json();
+    const { search }: RequestTypes = await req.json();
 
     const searchWords: string[] = search
       ? search.split(' ').filter(Boolean)

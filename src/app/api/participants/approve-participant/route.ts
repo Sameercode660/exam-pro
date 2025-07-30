@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 import nodemailer from "nodemailer";
 
+type RequestTypes = {
+  adminId: number;
+  participantIds: [];
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { participantIds, adminId } = await req.json();
+    const { participantIds, adminId }: RequestTypes = await req.json();
 
     if (!participantIds || !Array.isArray(participantIds) || participantIds.length === 0) {
       return NextResponse.json({ error: "participantIds must be a non-empty array." }, { status: 400 });

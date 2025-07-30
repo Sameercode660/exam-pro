@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  examId: number;
+}
+
 export async function POST(req: Request) {
   try {
-    const { examId } = await req.json();
+    const { examId }: RequestTypes = await req.json();
 
     await prisma.exam.update({
       where: { id: examId },

@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  examId: number;
+  adminId: number
+}
+
 
 export async function POST(req: NextRequest) {
   try {
-    const {examId, adminId} = await req.json();
+    const {examId, adminId}: RequestTypes = await req.json();
 
     if (!examId || !adminId) {
       return NextResponse.json({
@@ -15,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const exam = await prisma.exam.findUnique({
-      where: { id: parseInt(examId) , createdByAdminId: parseInt(adminId), visibility: true },
+      where: { id: examId , createdByAdminId: adminId, visibility: true },
       include: {
         createdBy: true,
         updatedBy: true,

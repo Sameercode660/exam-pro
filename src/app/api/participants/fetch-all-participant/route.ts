@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  search: string;
+  filter: string;
+  organizationId: number;
+  adminId: number;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { search, filter, organizationId, adminId } = await req.json();
+    const { search, filter, organizationId, adminId }: RequestTypes = await req.json();
     console.log(search, filter, organizationId, adminId)
 
     if (!organizationId) {

@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { Difficulty } from "@/generated/prisma";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  categoryName: string;
+  topicName: string;
+  text: string;
+  option1: string;
+  option2: string;
+  option3: string;
+  option4: string;
+  correctOption: number;
+  difficultyLevel: Difficulty;
+  adminId: number;
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +28,7 @@ export async function POST(req: NextRequest) {
       correctOption,
       difficultyLevel,
       adminId,
-    } = await req.json();
+    }: RequestTypes = await req.json();
 
     if (
       !categoryName ||
@@ -65,7 +77,7 @@ export async function POST(req: NextRequest) {
         categoryId: category.id,
         topicId: topic.id,
         difficulty: difficultyLevel.toUpperCase() as Difficulty,
-        correctOption: parseInt(correctOption), 
+        correctOption: correctOption,
         adminId,
         options: {
           create: [
@@ -79,22 +91,35 @@ export async function POST(req: NextRequest) {
     });
     console.log(`Created Question ID: ${createdQuestion.id}`);
 
-    if(!createdQuestion) {
-        return NextResponse.json({statusCode: 500, message: 'Unable to created the question.', status: false})
+    if (!createdQuestion) {
+      return NextResponse.json({
+        statusCode: 500,
+        message: "Unable to created the question.",
+        status: false,
+      });
     }
 
-    // insert into question frequency 
+    // insert into question frequency
     const questionFeq = await prisma.questionFrequency.create({
-        data: {
-            questionId: createdQuestion.id
-        }
-    })
+      data: {
+        questionId: createdQuestion.id,
+      },
+    });
 
-    if(!questionFeq) {
-        return NextResponse.json({statusCode: 400, message: 'Unable to create the entry in questionFrequency Table', status: false});
+    if (!questionFeq) {
+      return NextResponse.json({
+        statusCode: 400,
+        message: "Unable to create the entry in questionFrequency Table",
+        status: false,
+      });
     }
-    
-    return NextResponse.json({statusCode: 200, message: 'Qeustion created successfully', response: createdQuestion, status: true});
+
+    return NextResponse.json({
+      statusCode: 200,
+      message: "Qeustion created successfully",
+      response: createdQuestion,
+      status: true,
+    });
   } catch (error: unknown) {
     console.error("Error in POST request:", error);
 

@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  organizationId: number;
+  adminId: number;
+  filter: string;
+  search: string;
+  groupId: number;
+};
+
 export async function POST(req: Request) {
   try {
-    const { organizationId, adminId, filter, search, groupId } = await req.json();
+    const { organizationId, adminId, filter, search, groupId }: RequestTypes =
+      await req.json();
 
     if (!organizationId || !adminId || !filter || !groupId) {
       return NextResponse.json(
@@ -20,7 +29,9 @@ export async function POST(req: Request) {
         select: { id: true, name: true },
       });
 
-      const adminMap = Object.fromEntries(admins.map((admin) => [admin.id, admin.name]));
+      const adminMap = Object.fromEntries(
+        admins.map((admin) => [admin.id, admin.name])
+      );
       const adminIds = admins.map((admin) => admin.id);
 
       const whereClause: any = {
@@ -71,7 +82,6 @@ export async function POST(req: Request) {
           status,
         };
       });
-
     } else if (filter === "my") {
       const whereClause: any = {
         createdByAdminId: adminId,
@@ -120,15 +130,16 @@ export async function POST(req: Request) {
           status,
         };
       });
-
     } else {
       return NextResponse.json({ error: "Invalid filter." }, { status: 400 });
     }
 
     return NextResponse.json({ exams });
-
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error." },
+      { status: 500 }
+    );
   }
 }

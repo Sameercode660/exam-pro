@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  examId: number;
+  userId: number;
+}
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body: RequestTypes = await request.json();
     const { examId, userId } = body;
 
     console.log(examId, userId)

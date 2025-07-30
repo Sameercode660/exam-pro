@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+
+type RequestTypes = {
+  query: string;
+}
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body: RequestTypes = await request.json();
     const { query } = body;
 
     if (!query || typeof query !== 'string') {

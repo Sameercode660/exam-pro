@@ -1,7 +1,11 @@
 
-
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
+
+type RequestTypes = {
+  participantId: number;
+  query: string;
+}
 
 export async function POST(req: Request) {
   try {

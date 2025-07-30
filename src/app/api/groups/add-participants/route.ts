@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+type RequestTypes = {
+  groupId: number;
+  participantIds: []
+}
+
 export async function POST(req: Request) {
   try {
-    const { groupId, participantIds } = await req.json();
+    const { groupId, participantIds }: RequestTypes = await req.json();
 
     // Find participants already in the group, along with their names
     const existingGroupParticipants = await prisma.groupParticipant.findMany({

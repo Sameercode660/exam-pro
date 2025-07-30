@@ -5,10 +5,15 @@ import { serialize } from "cookie";
 import { z } from "zod";
 import { userSchema } from "@/utils/dataValidation";
 
+type RequestTypes = {
+  email: string;
+  password: string;
+}
+
 const passwordSchema = z.string().min(8, "Password must be at least 8 characters long");
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const body: RequestTypes = await req.json();
   const { email, password } = body;
 
   // Validate Email

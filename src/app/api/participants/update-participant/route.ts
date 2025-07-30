@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  id: number;
+  name: string;
+  email: string;
+  mobileNumber: string;
+  updatedById: number;
+};
+
 export async function PUT(req: NextRequest) {
   try {
-    const { id, name, email, mobileNumber, updatedById } = await req.json();
+    const { id, name, email, mobileNumber, updatedById }: RequestTypes = await req.json();
 
     if (!id || !name || !email || !mobileNumber || !updatedById) {
       return NextResponse.json(
-        { error: "All fields (id, name, email, mobileNumber, updatedById) are required." },
+        {
+          error:
+            "All fields (id, name, email, mobileNumber, updatedById) are required.",
+        },
         { status: 400 }
       );
     }
@@ -71,7 +82,6 @@ export async function PUT(req: NextRequest) {
     });
 
     return NextResponse.json({ message: "Participant updated successfully." });
-
   } catch (err) {
     console.error("Error updating participant:", err);
     return NextResponse.json(

@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+type RequestTypes = {
+  groupId: number;
+  participantId: number;
+}
+
 export async function POST(req: Request) {
   try {
-    const { groupId, participantId } = await req.json();
+    const { groupId, participantId }: RequestTypes = await req.json();
 
     await prisma.groupParticipant.updateMany({
       where: { groupId, participantId },

@@ -1,14 +1,20 @@
 // POST /api/groups/participants
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/utils/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/utils/prisma";
+
+type RequestTypes = {
+  groupId: number;
+  participantId: number;
+  userId: string;
+};
 
 export async function POST(req: NextRequest) {
   try {
-    const { groupId, participantId, userId } = await req.json();
+    const { groupId, participantId, userId }: RequestTypes = await req.json();
 
     if (!groupId || !participantId) {
       return NextResponse.json(
-        { error: 'Group ID and Participant ID are required' },
+        { error: "Group ID and Participant ID are required" },
         { status: 400 }
       );
     }
@@ -24,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        { error: 'Participant already in group' },
+        { error: "Participant already in group" },
         { status: 409 }
       );
     }
@@ -39,9 +45,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(added);
   } catch (err) {
-    console.error('Error adding participant:', err);
+    console.error("Error adding participant:", err);
     return NextResponse.json(
-      { error: 'Failed to add participant' },
+      { error: "Failed to add participant" },
       { status: 500 }
     );
   }

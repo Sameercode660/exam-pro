@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  groupId: number;
+  examId: number;
+  adminId: number;
+};
+
 export async function POST(req: Request) {
   try {
-    const { groupId, examId, adminId } = await req.json();
+    const { groupId, examId, adminId }: RequestTypes = await req.json();
 
     // Validate inputs
     if (!groupId || !examId || !adminId) {
@@ -19,7 +25,10 @@ export async function POST(req: Request) {
     });
 
     if (!group || !group.visibility) {
-      return NextResponse.json({ error: "Group not found or inactive." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Group not found or inactive." },
+        { status: 404 }
+      );
     }
 
     // Check if the exam exists and is visible
@@ -28,7 +37,10 @@ export async function POST(req: Request) {
     });
 
     if (!exam || !exam.visibility) {
-      return NextResponse.json({ error: "Exam not found or inactive." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Exam not found or inactive." },
+        { status: 404 }
+      );
     }
 
     // Check for existing group-exam mapping
@@ -63,9 +75,11 @@ export async function POST(req: Request) {
       message: "Exam successfully added to the group.",
       success: true,
     });
-
   } catch (err: any) {
     console.error("AddToGroup Error:", err);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

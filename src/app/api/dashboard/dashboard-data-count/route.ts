@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
+
+type RequestTypes = {
+  adminId: number;
+}
+
 export async function POST(req: Request) {
   try {
-    const { adminId } = await req.json();
+    const { adminId }: RequestTypes = await req.json();
 
     if (!adminId) {
       return NextResponse.json(
@@ -12,7 +17,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const adminIdInt = parseInt(adminId);
+    const adminIdInt = adminId;
 
     // Fetch all required data in parallel
     const [

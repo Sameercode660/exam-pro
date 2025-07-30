@@ -1,9 +1,14 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 
+type RequestTypes = {
+  adminId: number;
+  page: number;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { adminId, page = 1 } = await req.json();
+    const { adminId, page = 1 }: RequestTypes = await req.json();
 
     // Validate adminId
     if (!adminId) {
@@ -19,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     // Fetch paginated questions with admin details
     const questions = await prisma.question.findMany({
-      where: { adminId: parseInt(adminId), visibility: true },
+      where: { adminId: adminId, visibility: true },
       include: {
         category: true,
         topic: true,
@@ -37,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     // Get the total count of questions for pagination info
     const totalQuestions = await prisma.question.count({
-      where: { adminId: parseInt(adminId) },
+      where: { adminId },
     });
 
     // Return the paginated questions

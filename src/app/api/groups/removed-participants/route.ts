@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+type RequestTypes = {
+  groupId: number;
+}
+
+
 export async function POST(req: Request) {
   try {
-    const { groupId } = await req.json();
+    const { groupId }: RequestTypes = await req.json();
 
     const removedParticipants = await prisma.groupParticipant.findMany({
       where: {

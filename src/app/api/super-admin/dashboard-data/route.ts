@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+type RequestTypes = {
+  adminId: number;
+}
+
 export async function POST(req: NextRequest) {
   try {
 
-    const {adminId} = await req.json();
+    const {adminId}: RequestTypes = await req.json();
 
     const admin = await prisma.user.findFirst({
       where: { id: adminId,  role: 'SuperAdmin' },

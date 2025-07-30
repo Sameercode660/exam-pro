@@ -3,9 +3,14 @@ import prisma from "@/utils/prisma";
 import jwt from "jsonwebtoken";
 import { serialize } from "cookie";
 
+type RequestTypes = {
+  email: string;
+  password: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, password }: RequestTypes = await req.json();
 
     // Validate input
     if (!email || !password) {

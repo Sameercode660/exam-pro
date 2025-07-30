@@ -1,9 +1,15 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 
+
+type RequestTypes = {
+  questionId: number;
+  adminId: number;
+}
+
 export async function DELETE(req: NextRequest) {
   try {
-    const { questionId, adminId } = await req.json();
+    const { questionId, adminId }: RequestTypes = await req.json();
 
     if (!questionId || !adminId) {
       return NextResponse.json({
