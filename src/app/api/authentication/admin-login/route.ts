@@ -10,7 +10,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password }: RequestTypes = await req.json();
+    const { email, password }: Partial<RequestTypes> = await req.json();
 
     // Validate input
     if (!email || !password) {

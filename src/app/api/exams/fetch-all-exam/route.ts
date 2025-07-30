@@ -8,7 +8,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { adminId }: RequestTypes = await req.json();
+    const { adminId }: Partial<RequestTypes> = await req.json();
     console.log(adminId);
 
     const exams = await prisma.exam.findMany({

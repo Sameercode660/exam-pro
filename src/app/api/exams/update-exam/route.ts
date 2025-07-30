@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
-import { number } from "zod";
+ 
 
 type RequestTypes = {
   id: number;
@@ -28,7 +28,7 @@ export async function PUT(req: NextRequest) {
       startTime,
       endTime,
       updatedByAdminId,
-    }: RequestTypes = await req.json();
+    }: Partial<RequestTypes> = await req.json();
 
     if (!id || !adminId) {
       return NextResponse.json({
@@ -48,6 +48,10 @@ export async function PUT(req: NextRequest) {
         message: "Exam not found or unauthorized",
         status: false,
       });
+    }
+
+    if(duration !== undefined) {
+      console.log('duration')
     }
 
     let updateData: any = {

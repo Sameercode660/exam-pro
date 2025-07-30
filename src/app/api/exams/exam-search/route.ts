@@ -7,7 +7,7 @@ type RequestTypes = {
 }
 export async function POST(request: Request) {
   try {
-    const body: RequestTypes = await request.json();
+    const body: Partial<RequestTypes> = await request.json();
     const { query } = body;
 
     if (!query || typeof query !== 'string') {

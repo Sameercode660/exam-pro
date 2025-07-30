@@ -7,7 +7,7 @@ type RequestTypes = {
 }
 
 export async function POST(request: NextRequest) {
-  const { organizationId, search = "" }: RequestTypes = await request.json();
+  const { organizationId, search = "" }: Partial<RequestTypes> = await request.json();
 
   const superUsers = await prisma.user.findMany({
     where: {

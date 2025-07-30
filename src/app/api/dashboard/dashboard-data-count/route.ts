@@ -8,7 +8,7 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { adminId }: RequestTypes = await req.json();
+    const { adminId }: Partial<RequestTypes> = await req.json();
 
     if (!adminId) {
       return NextResponse.json(

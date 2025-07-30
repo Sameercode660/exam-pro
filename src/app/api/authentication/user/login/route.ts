@@ -13,7 +13,7 @@ type RequestTypes = {
 const passwordSchema = z.string().min(8, "Password must be at least 8 characters long");
 
 export async function POST(req: NextRequest) {
-  const body: RequestTypes = await req.json();
+  const body: Partial<RequestTypes> = await req.json();
   const { email, password } = body;
 
   // Validate Email

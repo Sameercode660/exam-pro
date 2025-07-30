@@ -9,7 +9,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email }: RequestTypes = await req.json();
+    const { email }: Partial<RequestTypes> = await req.json();
 
     
     if (!email || typeof email !== "string") {

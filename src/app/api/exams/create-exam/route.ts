@@ -13,7 +13,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const body: RequestTypes = await req.json();
+    const body: Partial<RequestTypes> = await req.json();
 
     const {
       title,
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    let finalStatus = status;
+    let finalStatus = status || '';
     let finalStartTime: Date | null = null;
     let finalEndTime: Date | null = null;
 
