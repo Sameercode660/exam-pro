@@ -38,6 +38,10 @@ export async function PUT(req: NextRequest) {
       });
     }
 
+    if(!duration) {
+      return NextResponse.json({error: 'duration is missing'}, {status: 400});
+    }
+
     const exam = await prisma.exam.findUnique({
       where: { id },
     });
@@ -48,10 +52,6 @@ export async function PUT(req: NextRequest) {
         message: "Exam not found or unauthorized",
         status: false,
       });
-    }
-
-    if(duration !== undefined) {
-      console.log('duration')
     }
 
     let updateData: any = {
