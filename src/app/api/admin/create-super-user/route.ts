@@ -13,7 +13,7 @@ type CreateSuperUserRequestBody = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, mobileNumber, password, createdById, organizationId } : CreateSuperUserRequestBody = await req.json();
+    const { name, email, mobileNumber, password, createdById, organizationId } : Partial<CreateSuperUserRequestBody> = await req.json();
 
     if (!name || !email || !mobileNumber || !password || !createdById || !organizationId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
