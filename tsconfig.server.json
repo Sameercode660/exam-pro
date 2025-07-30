@@ -16,11 +16,14 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["server.ts", "src/**/*.ts"],
+  "include": [
+    "server.ts",
+    "src/**/*.ts"
+  ],
   "exclude": [
     "node_modules",
     ".next",
-    "src/**/*.tsx",
-    "src/**/*.jsx"
+    "**/*.tsx",
+    "**/*.jsx"
   ]
 }
