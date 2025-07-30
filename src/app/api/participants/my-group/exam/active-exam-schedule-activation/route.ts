@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { qstash } from "@/utils/qstash";
 
+
 type RequestTypes = {
   examId: number;
   endTime: string;
@@ -8,9 +9,13 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { examId, endTime }: RequestTypes = await req.json();
+    const { examId, endTime }: Partial<RequestTypes> = await req.json();
 
     console.log("EndTime:", endTime);
+
+    if(!examId || !endTime) {
+      return NextResponse.json({error: 'examId or endTime is missing', status: 400});
+    }
 
     const endTimeMs = new Date(endTime).getTime();
     const now = Date.now();

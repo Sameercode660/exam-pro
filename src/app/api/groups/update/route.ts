@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       startDate,
       endDate,
       isActive,
-    }: RequestTypes = await req.json();
+    }: Partial<RequestTypes> = await req.json();
 
     // Validation
     if (!groupId || typeof groupId !== 'number') {

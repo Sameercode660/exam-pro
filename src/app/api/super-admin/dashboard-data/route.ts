@@ -8,7 +8,7 @@ type RequestTypes = {
 export async function POST(req: NextRequest) {
   try {
 
-    const {adminId}: RequestTypes = await req.json();
+    const {adminId}: Partial<RequestTypes> = await req.json();
 
     const admin = await prisma.user.findFirst({
       where: { id: adminId,  role: 'SuperAdmin' },

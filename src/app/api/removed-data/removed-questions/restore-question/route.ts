@@ -8,7 +8,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { questionId, adminId }: RequestTypes = await req.json();
+    const { questionId, adminId }: Partial<RequestTypes> = await req.json();
 
     const question = await prisma.question.update({
       where: {

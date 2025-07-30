@@ -7,7 +7,7 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { examId }: RequestTypes = await req.json();
+    const { examId }: Partial<RequestTypes> = await req.json();
 
     await prisma.exam.update({
       where: { id: examId },

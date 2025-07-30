@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   try {
 
     // fetching question id 
-    const {questionId, adminId}: RequestTypes = await req.json();
+    const {questionId, adminId}: Partial<RequestTypes> = await req.json();
 
     // checking the questionId availability
     if(!questionId || !adminId) {

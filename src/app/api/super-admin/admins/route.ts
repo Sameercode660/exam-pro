@@ -7,7 +7,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { search }: RequestTypes = await req.json();
+    const { search }: Partial<RequestTypes> = await req.json();
 
     const searchWords: string[] = search
       ? search.split(' ').filter(Boolean)

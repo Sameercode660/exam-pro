@@ -4,12 +4,12 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 
 type RequestTypes = {
-  name: string; email: string; mobileNumber: string; organizationId: string; createdById: number
+  name: string; email: string; mobileNumber: string; organizationId: number; createdById: number
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, mobileNumber, organizationId, createdById } = await req.json();
+    const { name, email, mobileNumber, organizationId, createdById }: Partial<RequestTypes> = await req.json();
 
     if (!name || !email || !mobileNumber || !organizationId || !createdById) {
       return NextResponse.json(

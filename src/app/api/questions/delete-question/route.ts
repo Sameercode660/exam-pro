@@ -9,7 +9,7 @@ type RequestTypes = {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { questionId, adminId }: RequestTypes = await req.json();
+    const { questionId, adminId }: Partial<RequestTypes> = await req.json();
 
     if (!questionId || !adminId) {
       return NextResponse.json({

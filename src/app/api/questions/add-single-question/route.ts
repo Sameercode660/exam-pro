@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       correctOption,
       difficultyLevel,
       adminId,
-    }: RequestTypes = await req.json();
+    }: Partial<RequestTypes> = await req.json();
 
     if (
       !categoryName ||
@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
       !option3 ||
       !option4 ||
       !correctOption ||
-      !adminId
+      !adminId ||
+      !difficultyLevel
     ) {
       return NextResponse.json({
         statusCode: 400,

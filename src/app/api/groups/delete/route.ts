@@ -8,7 +8,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { groupId, requesterId }: RequestTypes = await req.json();
+    const { groupId, requesterId }: Partial<RequestTypes> = await req.json();
 
     // Validate input
     if (!groupId || typeof groupId !== 'number') {

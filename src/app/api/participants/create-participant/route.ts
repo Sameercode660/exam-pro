@@ -7,7 +7,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, mobileNumber, password, organizationId }: RequestTypes =
+    const { name, email, mobileNumber, password, organizationId }: Partial<RequestTypes> =
       await req.json();
 
     // Validate inputs

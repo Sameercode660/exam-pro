@@ -8,7 +8,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { categoryId, adminId }: RequestTypes = await req.json();
+    const { categoryId, adminId }: Partial<RequestTypes> = await req.json();
 
     if (!categoryId || !adminId) {
       return NextResponse.json({ error: "Category ID and Admin ID are required" }, { status: 400 });

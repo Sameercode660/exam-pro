@@ -1,14 +1,18 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/utils/prisma';
+import { NextResponse } from "next/server";
+import prisma from "@/utils/prisma";
 
 type RequestTypes = {
   groupId: number;
-  participantIds: []
-}
+  participantIds: [];
+};
 
 export async function POST(req: Request) {
   try {
-    const { groupId, participantIds }: RequestTypes = await req.json();
+    const { groupId, participantIds }: Partial<RequestTypes> = await req.json();
+
+    if (!groupId || !Array.isArray(participantIds)) {
+      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+    }
 
     // Find participants already in the group, along with their names
     const existingGroupParticipants = await prisma.groupParticipant.findMany({
@@ -26,10 +30,12 @@ export async function POST(req: Request) {
       },
     });
 
-    const existingIds = existingGroupParticipants.map(p => p.participantId);
+    const existingIds = existingGroupParticipants.map((p) => p.participantId);
 
     // Filter new participants
-    const newParticipants = participantIds.filter((id: number) => !existingIds.includes(id));
+    const newParticipants = participantIds.filter(
+      (id: number) => !existingIds.includes(id)
+    );
 
     // Batch insert new participants
     if (newParticipants.length > 0) {
@@ -43,17 +49,21 @@ export async function POST(req: Request) {
     }
 
     // Extract skipped participant names
-    const skippedParticipantNames = existingGroupParticipants.map(p => p.user.name);
+    const skippedParticipantNames = existingGroupParticipants.map(
+      (p) => p.user.name
+    );
 
     return NextResponse.json({
-      message: 'Participants processed',
+      message: "Participants processed",
       addedCount: newParticipants.length,
       skippedCount: skippedParticipantNames.length,
       skippedParticipants: skippedParticipantNames, // Array of names
     });
-
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

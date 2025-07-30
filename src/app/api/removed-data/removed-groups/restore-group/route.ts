@@ -9,7 +9,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { groupId, adminId }: RequestTypes = await req.json();
+    const { groupId, adminId }: Partial<RequestTypes> = await req.json();
 
     const restored = await prisma.group.update({
       where: { id: groupId },

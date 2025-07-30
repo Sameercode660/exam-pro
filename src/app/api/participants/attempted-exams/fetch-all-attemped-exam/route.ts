@@ -7,7 +7,7 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { userId }: RequestTypes = await req.json();
+    const { userId }: Partial<RequestTypes> = await req.json();
     const parsedUserId = Number(userId);
 
     if (!parsedUserId || isNaN(parsedUserId)) {

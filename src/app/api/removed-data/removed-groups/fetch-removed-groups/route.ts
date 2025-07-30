@@ -8,7 +8,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { organizationId }: RequestTypes = await req.json();
+    const { organizationId }: Partial<RequestTypes> = await req.json();
 
     const removedGroups = await prisma.group.findMany({
       where: {

@@ -8,7 +8,7 @@ type RequestTypes = {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { organizationId }: RequestTypes = body;
+    const { organizationId }: Partial<RequestTypes> = body;
 
     if (!organizationId) {
       return NextResponse.json({ error: "organizationId is required" }, { status: 400 });

@@ -8,7 +8,7 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { groupId, participantId }: RequestTypes = await req.json();
+    const { groupId, participantId }: Partial<RequestTypes> = await req.json();
 
     if (!groupId || !participantId) {
       return NextResponse.json(

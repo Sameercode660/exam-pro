@@ -11,7 +11,7 @@ type RequestTypes = {
 
 export async function PUT(req: NextRequest) {
   try {
-    const { id, name, email, mobileNumber, updatedById }: RequestTypes = await req.json();
+    const { id, name, email, mobileNumber, updatedById }: Partial<RequestTypes> = await req.json();
 
     if (!id || !name || !email || !mobileNumber || !updatedById) {
       return NextResponse.json(

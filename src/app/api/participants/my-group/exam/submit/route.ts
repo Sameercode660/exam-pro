@@ -9,7 +9,11 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { examId, answers, userId }: RequestTypes = await req.json();
+    const { examId, answers, userId }: Partial<RequestTypes> = await req.json();
+
+    if(!examId || !answers || userId) {
+      return NextResponse.json({error: 'Anyone field in input is missing'}, {status: 400});
+    }
 
     const parsedExamId = Number(examId);
     const parsedUserId = Number(userId);

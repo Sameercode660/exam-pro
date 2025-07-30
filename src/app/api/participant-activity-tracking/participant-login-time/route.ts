@@ -1,6 +1,7 @@
  
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
+
 
 type RequestTypes = {
   participantId: number;
@@ -8,7 +9,11 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { participantId }: RequestTypes = body;
+  const { participantId }: Partial<RequestTypes> = body;
+
+  if(!participantId) {
+    return NextResponse.json({error: 'participant id is not found'}, {status: 400});
+  }
 
   try {
     const entry = await prisma.participantTracking.create({

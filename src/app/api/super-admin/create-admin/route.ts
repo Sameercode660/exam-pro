@@ -2,30 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 import nodemailer from "nodemailer";
 
-
+type CreateAdminType = {
+  organization: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    State: string;
+    Country: string;
+    CountryCode: string;
+  };
+  user: {
+    name: string;
+    email: string;
+    mobileNumber: string;
+    password: string;
+    createdById: number;
+  };
+};
 export async function POST(req: NextRequest) {
   try {
-    const {
-      organization,
-      user,
-    }: {
-      organization: {
-        name: string;
-        email: string;
-        phone: string;
-        address: string;
-        State: string;
-        Country: string;
-        CountryCode: string;
-      };
-      user: {
-        name: string;
-        email: string;
-        mobileNumber: string;
-        password: string;
-        createdById: number;
-      };
-    } = await req.json();
+    const body: Partial<CreateAdminType> = await req.json();
+
+    if (!body.organization || !body.user) {
+      return NextResponse.json(
+        { error: "Missing organization or user info" },
+        { status: 400 }
+      );
+    }
+
+    const { organization, user } = body;
 
     // ✅ 1. Check for existing organization
     const existingOrg = await prisma.organization.findUnique({
@@ -44,10 +50,7 @@ export async function POST(req: NextRequest) {
     // ✅ 2. Check if Admin email or phone already exists
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: user.email },
-          { mobileNumber: user.mobileNumber },
-        ],
+        OR: [{ email: user.email }, { mobileNumber: user.mobileNumber }],
       },
     });
 
@@ -79,7 +82,7 @@ export async function POST(req: NextRequest) {
       service: "gmail",
       auth: {
         user: "privatething789736@gmail.com",
-        pass: "ylpa stve wvnu tsly", 
+        pass: "ylpa stve wvnu tsly",
       },
     });
 
@@ -104,9 +107,16 @@ export async function POST(req: NextRequest) {
 
     await transporter.sendMail(mailOptions);
 
-    return NextResponse.json({ message: "Admin Created and Email Sent", admin, org });
+    return NextResponse.json({
+      message: "Admin Created and Email Sent",
+      admin,
+      org,
+    });
   } catch (error) {
     console.error("Create Admin Error:", error);
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
   }
 }

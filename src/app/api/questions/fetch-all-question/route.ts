@@ -8,7 +8,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { adminId, page = 1 }: RequestTypes = await req.json();
+    const { adminId, page = 1 }: Partial<RequestTypes> = await req.json();
 
     // Validate adminId
     if (!adminId) {

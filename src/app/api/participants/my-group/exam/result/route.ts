@@ -8,7 +8,7 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { examId, userId }: RequestTypes = await req.json();
+    const { examId, userId }: Partial<RequestTypes> = await req.json();
 
     const parsedExamId = Number(examId);
     const parsedUserId = Number(userId);

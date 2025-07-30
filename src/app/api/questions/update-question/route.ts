@@ -25,7 +25,7 @@ export async function PUT(req: NextRequest) {
       correctOption,
       options,
       adminId,
-    }: RequestTypes = body;
+    }: Partial<RequestTypes> = body;
 
     // Validate input
     if (!questionId || !text || !categoryName || !topicName || !difficulty || !correctOption || !options || !adminId) {

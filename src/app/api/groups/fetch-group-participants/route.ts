@@ -7,7 +7,7 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { groupId }: RequestTypes = await req.json();
+    const { groupId }: Partial<RequestTypes> = await req.json();
 
     if (!groupId) {
       return NextResponse.json({ error: "groupId is required" }, { status: 400 });

@@ -7,7 +7,7 @@ type RequestTypes = {
 }
 
 export async function POST(req: NextRequest) {
-  const body: RequestTypes = await req.json();
+  const body: Partial<RequestTypes> = await req.json();
   const { participantId } = body;
 
   try {

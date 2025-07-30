@@ -9,7 +9,7 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { groupId, examId, adminId }: RequestTypes = await req.json();
+    const { groupId, examId, adminId }: Partial<RequestTypes> = await req.json();
 
     // Validate inputs
     if (!groupId || !examId || !adminId) {

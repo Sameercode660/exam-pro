@@ -9,7 +9,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { participantIds, adminId }: RequestTypes = await req.json();
+    const { participantIds, adminId }: Partial<RequestTypes> = await req.json();
 
     if (!participantIds || !Array.isArray(participantIds) || participantIds.length === 0) {
       return NextResponse.json({ error: "participantIds must be a non-empty array." }, { status: 400 });

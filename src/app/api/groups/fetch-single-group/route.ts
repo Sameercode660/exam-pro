@@ -7,7 +7,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { groupId }: RequestTypes = await req.json();
+    const { groupId }: Partial<RequestTypes> = await req.json();
 
     if (!groupId || typeof groupId !== 'number') {
       return NextResponse.json({ error: 'Invalid or missing groupId' }, { status: 400 });

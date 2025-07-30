@@ -8,7 +8,11 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { examId, startTime, endTime } = await req.json();
+    const { examId, startTime, endTime }: Partial<RequestTypes> = await req.json();
+
+    if(!examId || !startTime || !endTime) {
+      return NextResponse.json({error: 'Anyone input field is empty'}, {status: 400});
+    }
 
     const startTimeMs = new Date(startTime).getTime();
     const endTimeMs = new Date(endTime).getTime();

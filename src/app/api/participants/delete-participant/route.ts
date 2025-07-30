@@ -8,7 +8,7 @@ type RequestTypes = {
 }
 export async function POST(req: NextRequest) {
   try {
-    const { participantId, adminId }: RequestTypes = await req.json();
+    const { participantId, adminId }: Partial<RequestTypes> = await req.json();
 
     if (!participantId) {
       return NextResponse.json({ error: "participantId is required." }, { status: 400 });

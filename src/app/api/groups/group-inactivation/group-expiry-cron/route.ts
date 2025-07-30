@@ -9,7 +9,7 @@ type RequestTypes = {
 
 export async function POST(req: Request) {
   try {
-    const { groupId, endDate }: RequestTypes = await req.json();
+    const { groupId, endDate }: Partial<RequestTypes> = await req.json();
 
     if (!groupId || !endDate) {
       return NextResponse.json({ error: "Missing groupId or endDate" }, { status: 400 });

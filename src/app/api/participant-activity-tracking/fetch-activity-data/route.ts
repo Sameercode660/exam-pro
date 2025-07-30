@@ -10,7 +10,7 @@ type RequestTypes = {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { search = "", fromDate, toDate }: RequestTypes = body;
+  const { search = "", fromDate, toDate }: Partial<RequestTypes> = body;
 
   try {
     const userActivities = await prisma.participantTracking.findMany({
