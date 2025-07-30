@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "tsc -p tsconfig.server.json",
+    "build": "tsc -p tsconfig.server.json && next build",
     "start": "node dist/server.js",
     "lint": "next lint",
-    "server": "ts-node -P tsconfig.server.json server.ts",
-    "dev:server": "nodemon",
+    "server": "ts-node -r tsconfig-paths/register -P tsconfig.server.json server.ts",
+    "dev:server": "nodemon --exec ts-node -r tsconfig-paths/register -P tsconfig.server.json server.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
