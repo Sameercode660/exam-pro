@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "tsc -p tsconfig.server.json && next build --no-lint",
-    "start": "node -r tsconfig-paths/register dist/server.js",
-    "lint": "next lint",
+    "build:server": "tsc -p tsconfig.server.json && tsc-alias -p tsconfig.server.json",
+    "build": "tsc -p tsconfig.server.json && tsc-alias -p tsconfig.server.json && next build --no-lint",
+    "start": "node dist/server.js",
     "server": "ts-node -r tsconfig-paths/register -P tsconfig.server.json server.ts",
     "dev:server": "nodemon --exec ts-node -r tsconfig-paths/register -P tsconfig.server.json server.ts",
+    "debug": "ls -la dist",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -52,6 +53,7 @@
     "nodemon": "^3.1.10",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5"

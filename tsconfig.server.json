@@ -12,11 +12,12 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "noEmit": false,
-    "baseUrl": ".",
+    "baseUrl": "./src", // changed from "./src"
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["*"],
+      "@prisma": ["src/generated/prisma"]
     }
   },
-  "include": ["server.ts", "src/utils/**/*.ts"],
+  "include": ["server.ts", "src/**/*.ts"],
   "exclude": ["node_modules", ".next", "**/*.tsx", "**/*.jsx"]
 }
