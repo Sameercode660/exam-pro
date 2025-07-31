@@ -1,5 +1,4 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
@@ -12,19 +11,12 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "skipLibCheck": true,
+    "noEmit": false,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": [
-    "server.ts",
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "**/*.tsx",
-    "**/*.jsx"
-  ]
+  "include": ["server.ts", "src/utils/**/*.ts"],
+  "exclude": ["node_modules", ".next", "**/*.tsx", "**/*.jsx"]
 }
