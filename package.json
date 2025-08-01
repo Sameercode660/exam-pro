@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build:server": "tsc -p tsconfig.server.json && tsc-alias -p tsconfig.server.json",
     "build": "tsc -p tsconfig.server.json && tsc-alias -p tsconfig.server.json && next build --no-lint",
-    "start": "node dist/server.js",
+    "start": "ts-node -r tsconfig-paths/register -P tsconfig.server.json server.ts",
     "server": "ts-node -r tsconfig-paths/register -P tsconfig.server.json server.ts",
     "dev:server": "nodemon --exec ts-node -r tsconfig-paths/register -P tsconfig.server.json server.ts",
     "debug": "ls -la dist",
