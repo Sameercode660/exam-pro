@@ -86,15 +86,17 @@ const ConductExam: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      await axios.post("/api/participants/my-group/exam/submit", {
+      const response = await axios.post("/api/participants/my-group/exam/submit", {
         examId,
         userId,
         answers,
       });
 
+      console.log(response.data)
       toast.success("Exam submitted successfully!");
       router.push(`/home/my-groups/result/${examId}`);
     } catch (err: any) {
+      console.log(err)
       toast.error(err.response?.data?.message || "Submission failed");
     }
   };

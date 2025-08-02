@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   try {
     const { examId, answers, userId }: Partial<RequestTypes> = await req.json();
 
-    if(!examId || !answers || userId) {
+    if(!examId || !answers || !userId) {
       return NextResponse.json({error: 'Anyone field in input is missing'}, {status: 400});
     }
 
