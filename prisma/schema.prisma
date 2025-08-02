@@ -347,3 +347,29 @@ model ParticipantTracking {
   spentTime     Int
   createdAt     DateTime    @default(now())
 }
+
+
+model StagingQuestion {
+  id              Int       @id @default(autoincrement())
+  adminId         Int
+  categoryName    String?
+  topicName       String?
+  question        String?
+  option1         String?
+  option2         String?
+  option3         String?
+  option4         String?
+  correctOption   Int?
+  difficultyLevel String?
+  status          StagingStatus @default(PENDING)
+  errorMessage    String?
+  createdAt       DateTime      @default(now())
+}
+
+enum StagingStatus {
+  PENDING
+  VALID
+  INVALID
+  DUPLICATE
+  IMPORTED
+}
