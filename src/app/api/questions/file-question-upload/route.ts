@@ -6,13 +6,12 @@ import { Difficulty, StagingStatus } from "@/generated/prisma";
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file");
     const { searchParams } = req.nextUrl;
     const adminId = Number(searchParams.get("adminId"));
 
-    console.log(adminId, file);
 
-    if (!file || !(file instanceof File)) {
+    if (!file || !(file instanceof Blob)) {
       return NextResponse.json(
         { error: "File not found or invalid" },
         { status: 400 }
