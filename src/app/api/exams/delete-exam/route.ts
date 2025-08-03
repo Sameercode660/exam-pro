@@ -1,30 +1,46 @@
-
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
 
 type RequestTypes = {
   examId: number;
   adminId: number;
-}
+};
 
 export async function POST(req: NextRequest) {
   try {
-    
-    const {examId, adminId}: Partial<RequestTypes> = await req.json();
+    const { examId, adminId }: Partial<RequestTypes> = await req.json();
 
-    if (!examId) {
+    if (!examId || !adminId) {
       return NextResponse.json({
         statusCode: 400,
-        message: "examId is required",
+        message: "examId and adminId are required",
+        status: false,
+      });
+    }
+
+    
+    const existingExam = await prisma.exam.findFirst({
+      where: {
+        id: examId,
+        createdByAdminId: adminId,
+        visibility: true,
+      },
+    });
+
+    if (!existingExam) {
+      return NextResponse.json({
+        statusCode: 404,
+        message: "Exam not found or already deleted",
         status: false,
       });
     }
 
     const deletedExam = await prisma.exam.update({
-      where: { id: adminId, createdByAdminId: adminId },
+      where: { id: examId },
       data: {
-        visibility: false
-      }
+        visibility: false, 
+        updatedByAdminId: adminId,
+      },
     });
 
     return NextResponse.json({

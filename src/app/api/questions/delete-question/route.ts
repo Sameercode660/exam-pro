@@ -11,6 +11,8 @@ export async function DELETE(req: NextRequest) {
   try {
     const { questionId, adminId }: Partial<RequestTypes> = await req.json();
 
+
+    console.log(questionId, adminId)
     if (!questionId || !adminId) {
       return NextResponse.json({
         statusCode: 400,
@@ -21,11 +23,13 @@ export async function DELETE(req: NextRequest) {
 
     const existingQuestion = await prisma.question.findFirst({
       where: {
-        id: questionId,
-        adminId: adminId,
+        id: Number(questionId),
+        // adminId: Number(adminId),
         visibility: true,
       },
     });
+
+    console.log('Existing question: ', existingQuestion)
 
     if (!existingQuestion) {
       return NextResponse.json({
@@ -35,10 +39,12 @@ export async function DELETE(req: NextRequest) {
       });
     }
 
-    await prisma.question.update({
-      where: { id: questionId },
-      data: { visibility: false, updatedBy: adminId },
+    const response = await prisma.question.update({
+      where: { id: Number(questionId) },
+      data: { visibility: false, updatedBy: Number(adminId) },
     });
+
+    console.log('Deleted question', response);
 
     return NextResponse.json({
       statusCode: 200,

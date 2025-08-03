@@ -35,7 +35,9 @@ export async function POST(req: NextRequest) {
       prisma.participant.count({
         where: {
           organizationId,
+          visibility: true
         },
+        
       }),
 
       // Exams created by users who belong to this org
@@ -44,6 +46,7 @@ export async function POST(req: NextRequest) {
           createdBy: {
             organizationId,
           },
+          visibility: true
         },
       }),
 
@@ -53,6 +56,7 @@ export async function POST(req: NextRequest) {
           admin: {
             organizationId,
           },
+          visibility: true
         },
       }),
 
@@ -63,6 +67,7 @@ export async function POST(req: NextRequest) {
           createdBy: {
             organizationId,
           },
+          visibility: true
         },
       }),
 
@@ -73,6 +78,7 @@ export async function POST(req: NextRequest) {
           createdBy: {
             organizationId,
           },
+          visibility: true
         },
       }),
     ]);
