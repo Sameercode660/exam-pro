@@ -4,6 +4,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Percent } from "lucide-react";
+import GoToButton from "@/components/utils/GoToButton";
 
 interface AnswerFeedback {
   questionId: number;
@@ -38,7 +39,7 @@ const ResultReview: React.FC<ResultReviewProps> = ({
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <Percent size={24} className="text-blue-500" />
-            Your Exam Summary
+            Your Exam Summary <span><GoToButton where="Dashboard" path="/home"></GoToButton></span>
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-6 text-gray-700 text-lg">

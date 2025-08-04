@@ -150,9 +150,9 @@ const ConductExam: React.FC = () => {
                 onClick={() => handleOptionSelect(currentQuestion.id, idx + 1)}
                 className={`w-full text-left px-4 py-3 rounded-xl border transition 
                 ${answers[currentQuestion.id] === idx + 1
-                  ? "bg-blue-500 text-white border-blue-600"
-                  : "bg-white hover:bg-gray-100"
-                }`}
+                    ? "bg-blue-500 text-white border-blue-600"
+                    : "bg-white hover:bg-gray-100"
+                  }`}
               >
                 {opt.text}
               </button>
@@ -179,17 +179,17 @@ const ConductExam: React.FC = () => {
               Next
             </Button>
           </div>
-
-          {(isHalfAttempted || isHalfTime || currentQ === questions.length - 1) && (
-            <Button
-              onClick={handleSubmit}
-              className="w-full mt-6 bg-green-500 hover:bg-green-600 text-white flex items-center gap-2 transition"
-            >
-              <SendHorizonal size={18} />
-              Submit Exam
-            </Button>
-          )}
         </CardContent>
+
+        {(isHalfAttempted || isHalfTime || currentQ === questions.length - 1) && (
+          <Button
+            onClick={handleSubmit}
+            className="w-full mt-6 bg-green-500 hover:bg-green-600 text-white flex items-center gap-2 transition"
+          >
+            <SendHorizonal size={18} />
+            Submit Exam
+          </Button>
+        )}
       </Card>
       <ToastContainer position="top-center"></ToastContainer>
     </div>
