@@ -94,6 +94,7 @@ model User {
   questionsUpdated    Question[]         @relation("UpdatedBy")
   groupCreated        Group[]            @relation("UpdatedBy")
   groupUpdated        Group[]            @relation("CreatedBy")
+  StagingQuestion     StagingQuestion[]
 }
 
 model Organization {
@@ -348,9 +349,8 @@ model ParticipantTracking {
   createdAt     DateTime    @default(now())
 }
 
-
 model StagingQuestion {
-  id              Int       @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   adminId         Int
   categoryName    String?
   topicName       String?
@@ -364,6 +364,7 @@ model StagingQuestion {
   status          StagingStatus @default(PENDING)
   errorMessage    String?
   createdAt       DateTime      @default(now())
+  admin           User          @relation(fields: [adminId], references: [id])
 }
 
 enum StagingStatus {
