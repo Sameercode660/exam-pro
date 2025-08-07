@@ -31,6 +31,9 @@ app.prepare().then(() => {
   // user online mapping for tracking
   const socketParticipantMap = new Map<string, string>();
 
+  // word cloud client
+  const wordCloudUsers = new Map<string, any>();
+
   io.on("connection", (socket) => {
     console.log("Connection established");
     socket.on("register", (user) => {
@@ -127,6 +130,37 @@ app.prepare().then(() => {
         sessionId: tracking.id,
         loginTime,
       };
+    });
+
+    // word cloud
+
+    // register word cloud
+    socket.on("register-wordcloud", (participantId) => {
+      const key = `wordcloud-${participantId}`;
+      wordCloudUsers.set(key, socket);
+      console.log(`${socket.id} registered for word cloud as ${key}`);
+    });
+
+    socket.on("create-wordcloud-admin", async ({ adminId, title, words }) => {
+      console.log("create word lcoud event called");
+      const created = await prisma.wordCloudQuestion.create({
+        data: {
+          adminId,
+          title,
+          words,
+        },
+      });
+      console.log(created);
+      console.log(wordCloudUsers);
+      // for (const [key, clientSocket] of wordCloudUsers.entries()) {
+      //   if (key.startsWith("wordcloud-")) {
+      //     console.log('event emited')
+      //     clientSocket.emit("new-wordcloud-question", created);
+      //   }
+      // }
+      const participantSocket = users.get("participant");
+
+      participantSocket.emit("new-wordcloud-question", created);
     });
 
     socket.on("disconnect", async () => {
