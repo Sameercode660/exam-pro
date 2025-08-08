@@ -51,6 +51,11 @@ const Home: React.FC<HomeProps> = ({ children }) => {
               router.push('/home/results')
             }}
           >Results</button>
+          <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer"
+            onClick={() => {
+              router.push('/home/word-cloud')
+            }}
+          >Word Cloud</button>
           <button className="px-4 py-2 rounded-lg hover:bg-gray-200 transition cursor-pointer" onClick={() => {
             logout();
           }}>Logout</button>

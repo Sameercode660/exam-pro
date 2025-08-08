@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
-
 type RequestTypes = {
-    wordCloudId: number;
-    participantId: number;
-    responseText: string;
-}
+  wordCloudId: number;
+  participantId: number;
+  responseText: string;
+};
 
 export async function POST(req: NextRequest) {
-  const { wordCloudId, participantId, responseText }: Partial<RequestTypes> = await req.json();
+  const { wordCloudId, participantId, responseText }: Partial<RequestTypes> =
+    await req.json();
 
-  if(!wordCloudId || !participantId || !responseText) {
-    return NextResponse.json({error: 'Anyone field is missing', status: 400})
+  if (!wordCloudId || !participantId || !responseText) {
+    return NextResponse.json({ error: "Anyone field is missing", status: 400 });
   }
 
   try {
@@ -24,6 +24,27 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const existingWord = await prisma.wordFrequency.findFirst({
+      where: {
+        word: responseText,
+        wordCloudId: wordCloudId,
+      },
+    });
+
+    if (existingWord) {
+      await prisma.wordFrequency.update({
+        where: { id: existingWord.id },
+        data: { count: { increment: 1 } },
+      });
+    } else {
+      await prisma.wordFrequency.create({
+        data: {
+          word: responseText,
+          count: 1,
+          wordCloudId,
+        },
+      });
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ success: false, error });

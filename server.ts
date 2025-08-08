@@ -151,7 +151,27 @@ app.prepare().then(() => {
         },
       });
       console.log(created);
-      console.log(wordCloudUsers);
+      // console.log(wordCloudUsers);
+
+      const wordList = words
+        .split(",")
+        .map((w: string) => w.trim().toLowerCase())
+        .filter((w: string) => w.length > 0);
+
+      // Create WordFrequency records with count = 1
+      const frequencyData = wordList.map((word: string) => ({
+        word,
+        count: 1,
+        wordCloudId: created.id,
+      }));
+
+      await prisma.wordFrequency.createMany({
+        data: frequencyData,
+        skipDuplicates: true, // Prevents crashing on duplicates if @@unique constraint is violated
+      });
+
+      console.log("Word cloud question created:", created);
+      console.log("Word frequencies created:", frequencyData);
       // for (const [key, clientSocket] of wordCloudUsers.entries()) {
       //   if (key.startsWith("wordcloud-")) {
       //     console.log('event emited')
@@ -160,7 +180,7 @@ app.prepare().then(() => {
       // }
       const participantSocket = users.get("participant");
 
-      participantSocket.emit("new-wordcloud-question", created);
+      io.emit("new-wordcloud-question", created);
     });
 
     socket.on("disconnect", async () => {

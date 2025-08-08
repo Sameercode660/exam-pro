@@ -11,7 +11,7 @@ import VisxWordCloud from "./VisxWordCloud";
 
 export default function WordCloudParticipant() {
   const [question, setQuestion] = useState<string | null>(null);
-  const [words, setWords] = useState<string[]>([]);
+  const [words, setWords] = useState<any[]>([]);
   const [responseText, setResponseText] = useState("");
   const [wordCloudId, setWordCloudId] = useState<number | null>(null);
 
@@ -20,14 +20,28 @@ export default function WordCloudParticipant() {
   const socket = useSocket();
 
   useEffect(() => {
-    if (!participantId) return;
+    if (!participantId || !socket) return;
 
-    socket?.emit("register", `participant-${participantId}`);
+    // socket?.emit("register", `participant-${participantId}`);
 
-    const handleNewQuestion = (data: any) => {
+    // socket?.on('response')
+    
+    const handleNewQuestion = async (data: any) => {
       setQuestion(data.title || null);
-      setWords(data.words.split(","));
       setWordCloudId(data.id);
+
+      try {
+        const res = await axios.post("/api/word-cloud/frequency-count", {
+          wordCloudId: data.id,
+        });
+
+        const freqWords = res.data; // Example: [{ word: "apple", count: 5 }]
+        console.log(res.data)
+        console.log(freqWords)
+        setWords(freqWords);
+      } catch (error) {
+        console.error("Failed to fetch word frequencies", error);
+      }
     };
 
     socket?.on("new-wordcloud-question", handleNewQuestion);
@@ -35,7 +49,7 @@ export default function WordCloudParticipant() {
     return () => {
       socket?.off("new-wordcloud-question", handleNewQuestion);
     };
-  }, [participantId]);
+  }, [participantId, socket?.id]);
 
   const handleSubmit = async () => {
     if (!responseText || !wordCloudId) {
@@ -50,6 +64,18 @@ export default function WordCloudParticipant() {
         responseText,
       });
 
+      try {
+        const res = await axios.post("/api/word-cloud/frequency-count", {
+          wordCloudId,
+        });
+
+        const freqWords = res.data; // Example: [{ word: "apple", count: 5 }]
+        console.log(res.data)
+        console.log(freqWords)
+        setWords(freqWords);
+      } catch (error) {
+        console.error("Failed to fetch word frequencies", error);
+      }
       toast.success("Response submitted successfully!");
       setResponseText("");
     } catch (error: any) {
@@ -66,9 +92,9 @@ export default function WordCloudParticipant() {
       {question && <h3 className="text-lg font-semibold">{question}</h3>}
 
       <VisxWordCloud
-        words={words.map((word) => ({
-          text: word,
-          value: 30,
+        words={words.map((word: any) => ({
+          text: word.word,
+          value: word.count,
         }))}
       />
 

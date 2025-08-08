@@ -385,8 +385,9 @@ model WordCloudQuestion {
   words     String // comma-separated words
   createdAt DateTime @default(now())
 
-  admin     User                @relation(fields: [adminId], references: [id])
-  responses WordCloudResponse[]
+  admin         User                @relation(fields: [adminId], references: [id])
+  responses     WordCloudResponse[]
+  WordFrequency WordFrequency[]
 }
 
 model WordCloudResponse {
@@ -398,6 +399,17 @@ model WordCloudResponse {
 
   participant Participant       @relation(fields: [participantId], references: [id])
   wordCloud   WordCloudQuestion @relation(fields: [wordCloudId], references: [id])
+}
+
+model WordFrequency {
+  id          Int    @id @default(autoincrement())
+  word        String
+  count       Int    @default(1)
+  wordCloudId Int
+
+  wordCloud WordCloudQuestion @relation(fields: [wordCloudId], references: [id])
+
+  @@unique([word, wordCloudId]) // Prevent duplicate word entries per question
 }
 
 model StagingParticipant {
