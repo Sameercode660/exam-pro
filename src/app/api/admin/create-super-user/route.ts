@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/utils/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/utils/prisma";
 
 type CreateSuperUserRequestBody = {
   name: string;
@@ -10,22 +10,48 @@ type CreateSuperUserRequestBody = {
   organizationId: number;
 };
 
-
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, mobileNumber, password, createdById, organizationId } : Partial<CreateSuperUserRequestBody> = await req.json();
+    const {
+      name,
+      email,
+      mobileNumber,
+      password,
+      createdById,
+      organizationId,
+    }: Partial<CreateSuperUserRequestBody> = await req.json();
 
-    if (!name || !email || !mobileNumber || !password || !createdById || !organizationId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (
+      !name ||
+      !email ||
+      !mobileNumber ||
+      !password ||
+      !createdById ||
+      !organizationId
+    ) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { mobileNumber }],
+      },
+    });
+    console.log(existingUser);
+
+    if (existingUser) {
+      return NextResponse.json({ error: "User already exists!" }, {status: 404});
+    }
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
         mobileNumber,
         password,
-        role: 'SuperUser',
+        role: "SuperUser",
         organizationId,
         createdById,
       },
@@ -33,10 +59,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(newUser);
   } catch (error) {
-    if(error instanceof Error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    console.error('Error creating superuser:', error);
-    return NextResponse.json({error: 'Internal server error'}, {status: 500})
+    console.error("Error creating superuser:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
