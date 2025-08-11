@@ -152,7 +152,7 @@ model Question {
   examId        Int?
   updatedBy     Int?
   visibility    Boolean    @default(true)
-  batchId       Int?  
+  batchId       Int?
 
   category          Category           @relation(fields: [categoryId], references: [id])
   topic             Topic              @relation(fields: [topicId], references: [id])
@@ -370,7 +370,7 @@ model UploadBatch {
 model StagingQuestion {
   id              Int           @id @default(autoincrement())
   adminId         Int
-  batchId         Int // Foreign key pointing to UploadBatch.id
+  batchId         Int? // Foreign key pointing to UploadBatch.id
   categoryName    String?
   topicName       String?
   question        String?
@@ -384,8 +384,8 @@ model StagingQuestion {
   errorMessage    String?
   createdAt       DateTime      @default(now())
 
-  admin User        @relation(fields: [adminId], references: [id])
-  batch UploadBatch @relation("BatchQuestions", fields: [batchId], references: [id])
+  admin User         @relation(fields: [adminId], references: [id])
+  batch UploadBatch? @relation("BatchQuestions", fields: [batchId], references: [id])
 
   @@index([batchId])
 }
