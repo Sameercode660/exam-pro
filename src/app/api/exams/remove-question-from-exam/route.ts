@@ -1,64 +1,61 @@
+// /exams/remove-questions-from-exam.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
 type RequestTypes = {
   examId: number;
-  questionId:number
-}
+  questionIds: number[];
+};
 
 export async function POST(req: NextRequest) {
   try {
     const body: Partial<RequestTypes> = await req.json();
-    const { examId, questionId } = body;
+    const { examId, questionIds } = body;
 
-    // Validate inputs
-    if (!examId || !questionId) {
+    if (!examId || !Array.isArray(questionIds) || questionIds.length === 0) {
       return NextResponse.json(
-        { error: "examId and questionId are required." },
+        { error: "examId and questionIds[] are required." },
         { status: 400 }
       );
     }
 
-    // Fetch the exam to ensure it exists
     const exam = await prisma.exam.findUnique({
       where: { id: Number(examId) },
-      include: { questions: true }, // Include questions to verify relationships
+      include: { questions: true },
     });
 
     if (!exam) {
-      return NextResponse.json(
-        { error: "Exam not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Exam not found." }, { status: 404 });
     }
 
-    // Check if the question is part of the exam
-    const questionExists = exam.questions.some((q) => q.id === Number(questionId));
-    if (!questionExists) {
+    const validIds = exam.questions
+      .map((q) => q.id)
+      .filter((id) => questionIds.includes(id));
+
+    if (validIds.length === 0) {
       return NextResponse.json(
-        { error: "The specified question is not associated with this exam." },
+        { error: "No matching questions found in this exam." },
         { status: 400 }
       );
     }
 
-    // Remove the question from the exam
     await prisma.exam.update({
       where: { id: Number(examId) },
       data: {
         questions: {
-          disconnect: { id: Number(questionId) }, // Disconnect the question
+          disconnect: validIds.map((id) => ({ id })),
         },
       },
     });
 
     return NextResponse.json(
-      { message: "Question removed from the exam successfully." },
+      { message: `${validIds.length} questions removed successfully.` },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error removing question from exam:", error);
+    console.error("Error removing questions from exam:", error);
     return NextResponse.json(
-      { error: "An error occurred while removing the question from the exam." },
+      { error: "An error occurred while removing questions from the exam." },
       { status: 500 }
     );
   }

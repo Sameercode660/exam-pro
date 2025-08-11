@@ -140,18 +140,20 @@ model Topic {
 }
 
 model Question {
-  id                Int                @id @default(autoincrement())
-  text              String
-  categoryId        Int
-  topicId           Int
-  correctOption     Int
-  difficulty        Difficulty         @default(MEDIUM)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  adminId           Int?
-  examId            Int?
-  updatedBy         Int?
-  visibility        Boolean            @default(true)
+  id            Int        @id @default(autoincrement())
+  text          String
+  categoryId    Int
+  topicId       Int
+  correctOption Int
+  difficulty    Difficulty @default(MEDIUM)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  adminId       Int?
+  examId        Int?
+  updatedBy     Int?
+  visibility    Boolean    @default(true)
+  batchId       Int?  
+
   category          Category           @relation(fields: [categoryId], references: [id])
   topic             Topic              @relation(fields: [topicId], references: [id])
   options           Option[]
@@ -161,8 +163,11 @@ model Question {
   Exam              Exam?              @relation(fields: [examId], references: [id])
   QuestionFrequency QuestionFrequency?
   IntResponse       IntResponse[]
-  User              User?              @relation(fields: [userId], references: [id])
-  userId            Int?
+
+  // NEW RELATION
+  batch  UploadBatch? @relation(fields: [batchId], references: [id])
+  User   User?        @relation(fields: [userId], references: [id])
+  userId Int?
 }
 
 model Option {
@@ -352,9 +357,20 @@ model ParticipantTracking {
   createdAt     DateTime    @default(now())
 }
 
+model UploadBatch {
+  id         Int               @id @default(autoincrement())
+  adminId    Int
+  fileName   String
+  status     String            @default("PENDING") // PENDING, VALID, IMPORTED, FAILED
+  uploadedAt DateTime          @default(now())
+  questions  StagingQuestion[] @relation("BatchQuestions")
+  Question   Question[]
+}
+
 model StagingQuestion {
   id              Int           @id @default(autoincrement())
   adminId         Int
+  batchId         Int // Foreign key pointing to UploadBatch.id
   categoryName    String?
   topicName       String?
   question        String?
@@ -367,7 +383,11 @@ model StagingQuestion {
   status          StagingStatus @default(PENDING)
   errorMessage    String?
   createdAt       DateTime      @default(now())
-  admin           User          @relation(fields: [adminId], references: [id])
+
+  admin User        @relation(fields: [adminId], references: [id])
+  batch UploadBatch @relation("BatchQuestions", fields: [batchId], references: [id])
+
+  @@index([batchId])
 }
 
 enum StagingStatus {

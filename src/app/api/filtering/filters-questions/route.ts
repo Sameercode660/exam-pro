@@ -3,18 +3,23 @@ import prisma from "@/utils/prisma";
 
 export async function GET(req: NextRequest) {
   try {
-    // Parse query parameters
     const categoryId = req.nextUrl.searchParams.get("categoryId");
     const topicId = req.nextUrl.searchParams.get("topicId");
     const difficulty = req.nextUrl.searchParams.get("difficulty");
+    const batchId = req.nextUrl.searchParams.get("batchId");
+    const adminId = req.nextUrl.searchParams.get("adminId");
+    const page = parseInt(req.nextUrl.searchParams.get("page") || "1");
+    const limit = parseInt(req.nextUrl.searchParams.get("limit") || "10");
 
-    // Build the filtering criteria
-    const filters: any = {visibility: true};
+    const filters: any = { visibility: true };
     if (categoryId) filters.categoryId = parseInt(categoryId);
     if (topicId) filters.topicId = parseInt(topicId);
     if (difficulty) filters.difficulty = difficulty;
+    if (batchId) filters.batchId = parseInt(batchId);
+    if (adminId) filters.adminId = parseInt(adminId);
 
-    // Fetch questions based on filters
+    const totalCount = await prisma.question.count({ where: filters });
+
     const questions = await prisma.question.findMany({
       where: filters,
       include: {
@@ -22,17 +27,19 @@ export async function GET(req: NextRequest) {
         topic: true,
         options: true,
       },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
     return NextResponse.json({
       statusCode: 200,
       message: "Questions fetched successfully",
       response: questions,
+      total: totalCount,
       status: true,
     });
   } catch (error: unknown) {
     console.error("Error in GET request:", error);
-
     return NextResponse.json({
       statusCode: 500,
       message: error instanceof Error ? error.message : "Unexpected error",
