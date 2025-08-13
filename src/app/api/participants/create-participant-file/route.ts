@@ -3,7 +3,7 @@ import prisma from "@/utils/prisma";
 import * as XLSX from "xlsx";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
-import { ParticipantStagingStatus } from "@/generated/prisma";
+import { StagingStatus } from "@/generated/prisma"; 
 
 type Participant = {
   name: string;
@@ -13,12 +13,11 @@ type Participant = {
   organizationId: number;
   createdById: number;
   approved: boolean;
+  batchId: number;
 };
 
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  api: { bodyParser: false },
 };
 
 export async function POST(req: NextRequest) {
@@ -30,45 +29,49 @@ export async function POST(req: NextRequest) {
 
     if (!file || !organizationId || !createdById) {
       return NextResponse.json(
-        { error: "File, organizationId and createdById are required." },
+        { error: "File, organizationId, and createdById are required." },
         { status: 400 }
       );
     }
 
-    // Read Excel
+    // 1️⃣ Create a batch record
+    const batch = await prisma.uploadParticipantBatch.create({
+      data: {
+        adminId: createdById,
+        fileName: file.name,
+        status: "PENDING",
+      },
+    });
+
+    // 2️⃣ Parse Excel
     const buffer = Buffer.from(await file.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const rawData = XLSX.utils.sheet_to_json(worksheet);
 
     if (rawData.length === 0) {
-      return NextResponse.json(
-        { error: "No participants found in file." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No participants found in file." }, { status: 400 });
     }
 
-    // Phase 1: Upload to staging
+    // 3️⃣ Insert into staging with batchId
     const stagingRecords = rawData.map((row: any) => ({
       name: String(row.name || "").trim(),
-      email: String(row.email || "")
-        .trim()
-        .toLowerCase(),
+      email: String(row.email || "").trim().toLowerCase(),
       mobileNumber: String(row.mobileNumber || "").trim(),
       password: generateRandomPassword(),
       organizationId,
       createdById,
-      status: ParticipantStagingStatus.PENDING,
+      status: StagingStatus.PENDING,
+      batchId: batch.id, // link to batch
     }));
 
     await prisma.stagingParticipant.createMany({ data: stagingRecords });
 
-    // Fetch back pending rows
+    // 4️⃣ Fetch back pending rows for validation
     const pendingRows = await prisma.stagingParticipant.findMany({
-      where: { status: "PENDING", organizationId, createdById },
+      where: { status: StagingStatus.PENDING, batchId: batch.id },
     });
 
-    // Check for duplicates
     const emails = pendingRows.map((p) => p.email);
     const mobileNumbers = pendingRows.map((p) => p.mobileNumber);
 
@@ -88,12 +91,10 @@ export async function POST(req: NextRequest) {
     let inserted = 0;
     let skipped = 0;
     let failed = 0;
-
     const participantsToInsert: Participant[] = [];
-    const emailPayload: { name: string; email: string; password: string }[] =
-      [];
+    const emailPayload: { name: string; email: string; password: string }[] = [];
 
-      
+    // 5️⃣ Validate and update statuses
     for (const row of pendingRows) {
       const isValid =
         row.name &&
@@ -103,19 +104,16 @@ export async function POST(req: NextRequest) {
       if (!isValid) {
         await prisma.stagingParticipant.update({
           where: { id: row.id },
-          data: { status: ParticipantStagingStatus.INVALID },
+          data: { status: StagingStatus.INVALID, errorMessage: "Invalid Format" },
         });
         failed++;
         continue;
       }
 
-      if (
-        existingEmails.has(row.email) ||
-        existingMobiles.has(row.mobileNumber)
-      ) {
+      if (existingEmails.has(row.email) || existingMobiles.has(row.mobileNumber)) {
         await prisma.stagingParticipant.update({
           where: { id: row.id },
-          data: { status: ParticipantStagingStatus.DUPLICATE },
+          data: { status: StagingStatus.DUPLICATE, errorMessage: "Duplicate Participant" },
         });
         skipped++;
         continue;
@@ -129,34 +127,28 @@ export async function POST(req: NextRequest) {
         organizationId,
         createdById,
         approved: true,
+        batchId: batch.id,
       });
 
-      emailPayload.push({
-        name: row.name,
-        email: row.email,
-        password: row.password,
-      });
+      emailPayload.push({ name: row.name, email: row.email, password: row.password });
 
       await prisma.stagingParticipant.update({
         where: { id: row.id },
-        data: { status: ParticipantStagingStatus.IMPORTED },
+        data: { status: StagingStatus.IMPORTED },
       });
 
       inserted++;
     }
 
-    // Final insert to main table
+    // 6️⃣ Final insert to main table
     if (participantsToInsert.length > 0) {
       await prisma.participant.createMany({ data: participantsToInsert });
     }
 
-    // Send emails
+    // 7️⃣ Send emails
     const transporter = nodemailer.createTransport({
       service: "gmail",
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD,
-      },
+      auth: { user: process.env.SMTP_EMAIL, pass: process.env.SMTP_PASSWORD },
     });
 
     for (const { email, name, password } of emailPayload) {
@@ -168,18 +160,22 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // 8️⃣ Update batch status
+    await prisma.uploadParticipantBatch.update({
+      where: { id: batch.id },
+      data: { status: "IMPORTED" },
+    });
+
     return NextResponse.json({
-      message: "Participants uploaded using staging and processed.",
+      message: "Participants uploaded and processed with batch tracking.",
+      batchId: batch.id,
       inserted,
       skipped,
       failed,
     });
   } catch (err) {
     console.error("Error in staging participant upload:", err);
-    return NextResponse.json(
-      { error: "Internal server error." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
 
@@ -187,6 +183,5 @@ function generateRandomPassword() {
   const min = 10000000;
   const max = 99999999;
   const randomBytes = crypto.randomBytes(4).readUInt32BE(0);
-  const range = max - min + 1;
-  return (min + (randomBytes % range)).toString();
+  return (min + (randomBytes % (max - min + 1))).toString();
 }
