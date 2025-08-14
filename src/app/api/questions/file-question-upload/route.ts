@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import prisma from "@/utils/prisma";
-import { Difficulty, StagingStatus } from "@/generated/prisma";
+import { Difficulty, StagingStatus, UploadType } from "@/generated/prisma";
+import { formatDateTime } from "@/utils/format-date-time";
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file");
     const { searchParams } = req.nextUrl;
+
     const adminId = Number(searchParams.get("adminId"));
     const fileName = searchParams.get("fileName") || "Questions.xlsx";
 
@@ -18,71 +20,98 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing adminId" }, { status: 400 });
     }
 
-    // 1️⃣ Create UploadBatch record
+    // 1) Create UploadBatch record
     const uploadBatch = await prisma.uploadBatch.create({
       data: { adminId, fileName, status: "PENDING" },
     });
     const batchId = uploadBatch.id;
 
-    // 2️⃣ Parse Excel
+    // 2) Parse Excel
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: "array" });
     const sheetName = workbook.SheetNames[0];
     const rawRows = XLSX.utils.sheet_to_json<any>(workbook.Sheets[sheetName]);
 
-    // 3️⃣ Insert into Staging
-    const stagedData = rawRows.map((row) => ({
+    // 3) Insert into Staging
+    const stagedData = rawRows.map((row: any) => ({
       adminId,
       batchId,
-      categoryName: String(row.categoryName || "").trim(),
-      topicName: String(row.topicName || "").trim(),
-      question: String(row.question || "").trim(),
-      option1: String(row.option1 || "").trim(),
-      option2: String(row.option2 || "").trim(),
-      option3: String(row.option3 || "").trim(),
-      option4: String(row.option4 || "").trim(),
+      categoryName: String(row.categoryName ?? "").trim(),
+      topicName: String(row.topicName ?? "").trim(),
+      question: String(row.question ?? "").trim(),
+      option1: String(row.option1 ?? "").trim(),
+      option2: String(row.option2 ?? "").trim(),
+      option3: String(row.option3 ?? "").trim(),
+      option4: String(row.option4 ?? "").trim(),
       correctOption: Number(row.correctOption),
-      difficultyLevel: String(row.difficultyLevel || "").trim().toUpperCase(),
-      status: StagingStatus.PENDING,
+      difficultyLevel: String(row.difficultyLevel ?? "").trim().toUpperCase(),
+      status: StagingStatus.PENDING as StagingStatus,
     }));
 
-    await prisma.stagingQuestion.createMany({ data: stagedData });
+    if (stagedData.length > 0) {
+      await prisma.stagingQuestion.createMany({ data: stagedData });
+    }
 
-    // 4️⃣ Fetch PENDING rows
+    // 4) Process rows
     const pendingRows = await prisma.stagingQuestion.findMany({
-      where: { status: "PENDING", batchId, adminId },
+      where: { status: StagingStatus.PENDING, batchId, adminId },
     });
 
-    let inserted = 0, skipped = 0, failed = 0;
+    // allow all enum difficulties you defined
+    const allowedDifficulties: string[] = [
+      "EASY",
+      "MEDIUM",
+      "HARD",
+      "VERY_HARD",
+      "TRICKY",
+    ];
 
-    for (const row of pendingRows) {
-      let error = "";
+    let inserted = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    // Frontend-ready summary table
+    // columns: Row No | Question | Status | Error Message
+    const summaryRows: Array<[number, string, string, string]> = [];
+
+    for (let i = 0; i < pendingRows.length; i++) {
+      const row = pendingRows[i];
+      let errorMessage = "";
+      let status: StagingStatus = StagingStatus.IMPORTED;
 
       const isValid =
-        row.categoryName &&
-        row.topicName &&
-        row.question &&
+        !!row.categoryName &&
+        !!row.topicName &&
+        !!row.question &&
         [1, 2, 3, 4].includes(row.correctOption ?? 0) &&
-        ["EASY", "MEDIUM", "HARD"].includes(row.difficultyLevel ?? "");
+        allowedDifficulties.includes(row.difficultyLevel ?? "");
 
       if (!isValid) {
-        error = "Invalid format";
+        errorMessage = "Invalid format";
+        status = StagingStatus.INVALID;
       } else {
         const exists = await prisma.question.findFirst({
           where: { text: row.question!, adminId },
         });
-        if (exists) error = "Duplicate";
+        if (exists) {
+          errorMessage = "Duplicate";
+          status = StagingStatus.DUPLICATE;
+        }
       }
 
-      if (error) {
+      if (errorMessage) {
         await prisma.stagingQuestion.update({
           where: { id: row.id },
-          data: {
-            status: error === "Duplicate" ? "DUPLICATE" : "INVALID",
-            errorMessage: error,
-          },
+          data: { status, errorMessage },
         });
-        error === "Duplicate" ? skipped++ : failed++;
+
+        if (status === StagingStatus.DUPLICATE) {
+          skipped++;
+        } else {
+          failed++;
+        }
+
+        summaryRows.push([i + 1, row.question || "", status, errorMessage]);
         continue;
       }
 
@@ -111,7 +140,7 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // ✅ Create final question linked to this batch
+        // Create final question (linked to batch)
         await prisma.question.create({
           data: {
             text: row.question!,
@@ -120,7 +149,7 @@ export async function POST(req: NextRequest) {
             difficulty: row.difficultyLevel as Difficulty,
             correctOption: row.correctOption!,
             adminId,
-            batchId, // batch id
+            batchId,
             options: {
               create: [
                 { text: row.option1!, isCorrect: row.correctOption === 1 },
@@ -134,32 +163,79 @@ export async function POST(req: NextRequest) {
 
         await prisma.stagingQuestion.update({
           where: { id: row.id },
-          data: { status: "IMPORTED", errorMessage: null },
+          data: { status: StagingStatus.IMPORTED, errorMessage: null },
         });
 
         inserted++;
+        summaryRows.push([i + 1, row.question || "", StagingStatus.IMPORTED, ""]);
       } catch (err) {
         console.error("DB Insert Error:", err);
         failed++;
         await prisma.stagingQuestion.update({
           where: { id: row.id },
-          data: { status: "INVALID", errorMessage: "DB Insert Failed" },
+          data: { status: StagingStatus.INVALID, errorMessage: "DB Insert Failed" },
         });
+        summaryRows.push([i + 1, row.question || "", StagingStatus.INVALID, "DB Insert Failed"]);
       }
     }
 
-    // 5️⃣ Determine batch status
+    // 5) Determine batch status (UploadBatch.status is a free string)
     const batchStatus =
-      inserted > 0 && failed === 0 ? "IMPORTED"
-      : inserted > 0 && failed > 0 ? "PARTIAL"
-      : "FAILED";
+      inserted > 0 && failed === 0
+        ? "IMPORTED"
+        : inserted > 0 && failed > 0
+        ? "PARTIAL"
+        : "FAILED";
 
     await prisma.uploadBatch.update({
       where: { id: batchId },
       data: { status: batchStatus },
     });
 
-    // 6️⃣ Final response
+    // getting the admin name
+    const admin = await prisma.user.findUnique({
+      where: {
+        id: adminId
+      }
+    })
+    // 6) Save FileUploadSummary
+    const summaryData = {
+      columns: ["Row No", "Question", "Status", "Error Message"],
+      rows: summaryRows.map(([rowNo, question, status, err]) => [
+        rowNo,
+        question,
+        String(status), // ensure plain string in JSON
+        err,
+      ]),
+      totals: {
+        inserted,
+        skipped,
+        failed,
+        total: inserted + skipped + failed,
+      },
+      meta: {
+        adminName: admin?.name,
+        fileName,
+        batchId,
+        processedAt: formatDateTime(new Date()),
+        batchStatus,
+      },
+    };
+
+    await prisma.fileUploadSummary.create({
+      data: {
+        batchId,
+        adminId,
+        type: UploadType.QUESTION_FILE,
+        fileName,
+        inserted,
+        skipped,
+        failed,
+        summaryData,
+      },
+    });
+
+    // 7) Return full summary for frontend Excel download
     return NextResponse.json({
       message: "Upload completed",
       batchId,
@@ -167,6 +243,7 @@ export async function POST(req: NextRequest) {
       skipped,
       failed,
       batchStatus,
+      summaryData,
     });
   } catch (error) {
     console.error("Upload Error:", error);

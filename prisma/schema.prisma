@@ -102,6 +102,7 @@ model User {
   StagingParticipant     StagingParticipant[]
   UploadBatch            UploadBatch[]
   UploadParticipantBatch UploadParticipantBatch[]
+  FileUploadSummary      FileUploadSummary[]
 }
 
 model Organization {
@@ -362,14 +363,15 @@ model ParticipantTracking {
 }
 
 model UploadBatch {
-  id         Int               @id @default(autoincrement())
-  adminId    Int
-  fileName   String
-  status     String            @default("PENDING") // PENDING, VALID, IMPORTED, FAILED
-  admin      User              @relation(fields: [adminId], references: [id])
-  uploadedAt DateTime          @default(now())
-  questions  StagingQuestion[] @relation("BatchQuestions")
-  Question   Question[]
+  id                Int                 @id @default(autoincrement())
+  adminId           Int
+  fileName          String
+  status            String              @default("PENDING") // PENDING, VALID, IMPORTED, FAILED
+  admin             User                @relation(fields: [adminId], references: [id])
+  uploadedAt        DateTime            @default(now())
+  questions         StagingQuestion[]   @relation("BatchQuestions")
+  Question          Question[]
+  FileUploadSummary FileUploadSummary[]
 }
 
 model UploadParticipantBatch {
@@ -470,4 +472,25 @@ enum ParticipantStagingStatus {
   INVALID
   DUPLICATE
   IMPORTED
+}
+
+enum UploadType {
+  QUESTION_FILE
+  PARTICIPANT_FILE
+  PARTICIPANT_GROUP_ADD
+}
+
+model FileUploadSummary {
+  id          Int          @id @default(autoincrement())
+  batchId     Int?
+  adminId     Int
+  type        UploadType
+  fileName    String
+  inserted    Int
+  skipped     Int
+  failed      Int
+  summaryData Json? // Full structured summary for Excel
+  createdAt   DateTime     @default(now())
+  admin       User         @relation(fields: [adminId], references: [id])
+  batch       UploadBatch? @relation(fields: [batchId], references: [id])
 }
