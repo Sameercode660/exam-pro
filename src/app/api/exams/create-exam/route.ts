@@ -56,6 +56,14 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      if(new Date(startTime) < new Date()) {
+        return NextResponse.json({
+          statusCode: 400,
+          message: "start date cannot be in past please correct your computer date!",
+          status: false,
+        });
+      }
+
       finalStartTime = new Date(startTime);
 
       if (isNaN(finalStartTime.getTime())) {

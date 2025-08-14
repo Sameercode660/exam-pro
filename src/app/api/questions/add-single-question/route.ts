@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         categoryId: category.id,
         topicId: topic.id,
         difficulty: difficultyLevel.toUpperCase() as Difficulty,
-        correctOption: correctOption,
+        correctOption: Number(correctOption),
         adminId,
         options: {
           create: [
