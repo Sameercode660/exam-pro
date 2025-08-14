@@ -1,21 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import * as XLSX from "xlsx";
+import prisma from "@/utils/prisma";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
-import { StagingStatus } from "@/generated/prisma"; // enum: PENDING | VALID | INVALID | DUPLICATE | IMPORTED
+import { StagingStatus, UploadType } from "@/generated/prisma";
+import { formatDateTime } from "@/utils/format-date-time";
 
 type RawRow = {
   name?: string;
   email?: string;
   mobileNumber?: string;
-};
-
-type NormalizedRow = {
-  name: string;
-  email: string;
-  mobileNumber: string;
-  password: string;
 };
 
 export const config = {
@@ -25,100 +19,105 @@ export const config = {
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
-    const groupId = Number(formData.get("groupId"));
+    const file = formData.get("file");
+    const groupId = formData.get("groupId")
+      ? Number(formData.get("groupId"))
+      : undefined;
     const organizationId = Number(formData.get("organizationId"));
     const createdById = Number(formData.get("createdById"));
 
-    if (!file || !groupId || !organizationId || !createdById) {
-      return NextResponse.json(
-        { error: "file, groupId, organizationId and createdById are required." },
-        { status: 400 }
-      );
+    const { searchParams } = req.nextUrl;
+    // Keep naming parity with question upload API
+    const adminId = Number(searchParams.get("adminId") || createdById);
+    const fileName = searchParams.get("fileName") || (file instanceof File ? file.name : "Participants.xlsx");
+
+    if (!file || !(file instanceof Blob)) {
+      return NextResponse.json({ error: "File not found or invalid" }, { status: 400 });
+    }
+    if (!organizationId || !adminId || !createdById) {
+      return NextResponse.json({ error: "Missing organizationId/adminId/createdById" }, { status: 400 });
     }
 
-    // 1) Create the batch (PENDING)
+    // 1) Create batch in UploadParticipantBatch
     const batch = await prisma.uploadParticipantBatch.create({
       data: {
-        adminId: createdById,
-        fileName: file.name,
+        adminId,
+        fileName,
         status: "PENDING",
       },
     });
+    const batchId = batch.id;
 
-    // 2) Read the excel
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const workbook = XLSX.read(buffer, { type: "buffer" });
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rawData = XLSX.utils.sheet_to_json<RawRow>(worksheet);
+    // 2) Parse Excel
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    const rawRows = XLSX.utils.sheet_to_json<RawRow>(workbook.Sheets[sheetName]);
 
-    if (rawData.length === 0) {
+    if (rawRows.length === 0) {
       await prisma.uploadParticipantBatch.update({
-        where: { id: batch.id },
+        where: { id: batchId },
         data: { status: "FAILED" },
       });
       return NextResponse.json({ error: "No participants found in file." }, { status: 400 });
     }
 
-    // 3) Normalize + stage all rows (PENDING)
-    const stagedRows: NormalizedRow[] = rawData.map((row) => ({
+    // 3) Stage rows
+    const stagedToCreate = rawRows.map((row) => ({
       name: String(row?.name ?? "").trim(),
       email: String(row?.email ?? "").trim().toLowerCase(),
       mobileNumber: String(row?.mobileNumber ?? "").trim(),
       password: generateRandomPassword(),
+      organizationId,
+      createdById: adminId,
+      status: StagingStatus.PENDING as StagingStatus,
+      batchId,
     }));
 
-    await prisma.stagingParticipant.createMany({
-      data: stagedRows.map((r) => ({
-        name: r.name,
-        email: r.email,
-        mobileNumber: r.mobileNumber,
-        password: r.password,
-        organizationId,
-        createdById,
-        status: StagingStatus.PENDING,
-        batchId: batch.id,
-      })),
-    });
+    if (stagedToCreate.length > 0) {
+      await prisma.stagingParticipant.createMany({ data: stagedToCreate });
+    }
 
-    // 4) Fetch PENDING rows for this batch to validate
+    // 4) Process PENDING
     const pendingRows = await prisma.stagingParticipant.findMany({
-      where: { batchId: batch.id, status: StagingStatus.PENDING },
+      where: { status: StagingStatus.PENDING, batchId },
       orderBy: { id: "asc" },
     });
 
-    // Build easy lookups
-    const pendingEmails = pendingRows.map((p) => p.email);
-    const pendingMobiles = pendingRows.map((p) => p.mobileNumber);
+    const emails = pendingRows.map((r) => r.email);
+    const mobiles = pendingRows.map((r) => r.mobileNumber);
 
-    // 5) Lookup existing participants by email or mobile
+    // Existing participants in same org
     const existingParticipants = await prisma.participant.findMany({
       where: {
-        OR: [
-          { email: { in: pendingEmails } },
-          { mobileNumber: { in: pendingMobiles } },
-        ],
         organizationId,
+        OR: [{ email: { in: emails } }, { mobileNumber: { in: mobiles } }],
       },
       select: { id: true, email: true, mobileNumber: true, name: true },
     });
     const existingByEmail = new Map(existingParticipants.map((p) => [p.email.toLowerCase(), p]));
     const existingByMobile = new Map(existingParticipants.map((p) => [p.mobileNumber, p]));
 
-    // 6) Determine which existing participants are already in the group
+    // If group provided, figure out who is already in it
     const existingIds = existingParticipants.map((p) => p.id);
-    const existingInGroup = await prisma.groupParticipant.findMany({
-      where: { groupId, participantId: { in: existingIds } },
-      select: { participantId: true },
-    });
-    const alreadyInGroupIds = new Set(existingInGroup.map((g) => g.participantId));
+    const alreadyInGroupIds = new Set<number>();
+    if (groupId) {
+      const existingGp = await prisma.groupParticipant.findMany({
+        where: { groupId, participantId: { in: existingIds } },
+        select: { participantId: true },
+      });
+      for (const x of existingGp) alreadyInGroupIds.add(x.participantId);
+    }
 
-    // Buckets
-    const invalidStagingIds: number[] = [];
-    const duplicateStagingIds: number[] = []; // existing participant -> mark DUPLICATE in staging (since they already exist)
-    const importedStagingIds: number[] = [];
+    // Counters
+    let inserted = 0;
+    let skipped = 0;
+    let failed = 0;
 
-    const toGroupExisting: number[] = []; // existing participant IDs to add to group
+    // For group adds (existing)
+    const toGroupExisting: number[] = [];
+
+    // For creations
     const createPayload: {
       name: string;
       email: string;
@@ -129,18 +128,36 @@ export async function POST(req: NextRequest) {
       approved: boolean;
       batchId: number;
     }[] = [];
+    const createdEmailPayload: { email: string; name: string; password: string }[] = [];
+    let createdParticipantIds: number[] = [];
 
-    const createdEmails: { email: string; name: string; password: string }[] = [];
+    // Frontend-ready summary table
+    // Reuse the "columns/rows/totals/meta" shape so your Excel downloader works identically.
+    // Columns: Row No | Name | Email | Mobile | Status | Error / Action
+    const summaryRows: Array<[number, string, string, string, string, string]> = [];
 
-    // 7) Validate each staged row
-    for (const row of pendingRows) {
-      const isValid =
-        !!row.name &&
-        /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(row.email) &&
-        /^\d{10}$/.test(row.mobileNumber);
+    const validateRow = (r: typeof pendingRows[number]) =>
+      !!r.name &&
+      /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(r.email) &&
+      /^\d{10}$/.test(r.mobileNumber);
+
+    for (let i = 0; i < pendingRows.length; i++) {
+      const row = pendingRows[i];
+      let errorMessage = "";
+      let stagingStatus: StagingStatus = StagingStatus.IMPORTED;
+      let actionNote = "";
+
+      const isValid = validateRow(row);
 
       if (!isValid) {
-        invalidStagingIds.push(row.id);
+        errorMessage = "Invalid format";
+        stagingStatus = StagingStatus.INVALID;
+        failed++;
+        await prisma.stagingParticipant.update({
+          where: { id: row.id },
+          data: { status: stagingStatus, errorMessage },
+        });
+        summaryRows.push([i + 1, row.name ?? "", row.email ?? "", row.mobileNumber ?? "", String(stagingStatus), errorMessage]);
         continue;
       }
 
@@ -149,105 +166,136 @@ export async function POST(req: NextRequest) {
         existingByMobile.get(row.mobileNumber);
 
       if (existing) {
-        // Existing participant -> mark staging DUPLICATE
-        duplicateStagingIds.push(row.id);
-        // Add to group if not already
-        if (!alreadyInGroupIds.has(existing.id)) {
-          toGroupExisting.push(existing.id);
+        // Existing participant
+        stagingStatus = StagingStatus.DUPLICATE;
+
+        if (groupId) {
+          // add to group if not already
+          if (!alreadyInGroupIds.has(existing.id)) {
+            toGroupExisting.push(existing.id);
+            actionNote = "Existing user added to group";
+          } else {
+            actionNote = "Existing user already in group";
+          }
+        } else {
+          actionNote = "Existing user";
         }
+
+        skipped++;
+        await prisma.stagingParticipant.update({
+          where: { id: row.id },
+          data: { status: stagingStatus, errorMessage: "Duplicate" },
+        });
+
+        summaryRows.push([
+          i + 1,
+          row.name || "",
+          row.email || "",
+          row.mobileNumber || "",
+          String(stagingStatus),
+          actionNote || "Duplicate",
+        ]);
         continue;
       }
 
-      // New participant -> will create + import
+      // New participant -> schedule creation
       createPayload.push({
         name: row.name,
         email: row.email.toLowerCase(),
         mobileNumber: row.mobileNumber,
         password: row.password,
         organizationId,
-        createdById,
+        createdById: adminId,
         approved: true,
-        batchId: batch.id,
+        batchId,
       });
-
-      createdEmails.push({
+      createdEmailPayload.push({
         email: row.email.toLowerCase(),
         name: row.name,
         password: row.password,
       });
 
-      importedStagingIds.push(row.id); // mark IMPORTED after creation
+      // We'll set staging to IMPORTED after DB create succeeds
     }
 
-    // Counts for response
-    const alreadyInGroupCount =
-      existingParticipants.filter((p) => alreadyInGroupIds.has(p.id)).length;
-    const willAddExistingCount = toGroupExisting.length;
-    const toCreateCount = createPayload.length;
-    const invalidCount = invalidStagingIds.length;
-    const duplicateCount = duplicateStagingIds.length;
-
-    // 8) Transaction: create new participants, add all (existing+new) to group, update staging
-    let createdParticipantsIds: number[] = [];
-
+    // Perform DB mutations in a transaction
     await prisma.$transaction(async (tx) => {
+      // Create new participants
       if (createPayload.length > 0) {
         await tx.participant.createMany({ data: createPayload });
 
-        // Re-fetch created by email to get IDs
-        const justCreated = await tx.participant.findMany({
+        const created = await tx.participant.findMany({
           where: {
             organizationId,
             email: { in: createPayload.map((c) => c.email) },
           },
           select: { id: true, email: true },
         });
-        createdParticipantsIds = justCreated.map((p) => p.id);
-      }
+        createdParticipantIds = created.map((c) => c.id);
 
-      // Group insert: existing to add + newly created
-      const groupInsertIds = [...toGroupExisting, ...createdParticipantsIds];
-      if (groupInsertIds.length > 0) {
-        await tx.groupParticipant.createMany({
-          data: groupInsertIds.map((participantId) => ({
-            groupId,
-            participantId,
-          })),
-          skipDuplicates: true,
+        // Mark their staging rows as IMPORTED
+        await tx.stagingParticipant.updateMany({
+          where: {
+            batchId,
+            email: { in: createPayload.map((c) => c.email) },
+          },
+          data: { status: StagingStatus.IMPORTED, errorMessage: null },
         });
       }
 
-      // Update staging statuses
-      if (invalidStagingIds.length > 0) {
-        await tx.stagingParticipant.updateMany({
-          where: { id: { in: invalidStagingIds } },
-          data: { status: StagingStatus.INVALID },
-        });
-      }
-      if (duplicateStagingIds.length > 0) {
-        await tx.stagingParticipant.updateMany({
-          where: { id: { in: duplicateStagingIds } },
-          data: { status: StagingStatus.DUPLICATE },
-        });
-      }
-      if (importedStagingIds.length > 0) {
-        await tx.stagingParticipant.updateMany({
-          where: { id: { in: importedStagingIds } },
-          data: { status: StagingStatus.IMPORTED },
-        });
+      // Add to group if requested: both newly created + existing to add
+      if (groupId) {
+        const groupInsertIds = [...createdParticipantIds, ...toGroupExisting];
+        if (groupInsertIds.length > 0) {
+          await tx.groupParticipant.createMany({
+            data: groupInsertIds.map((participantId) => ({
+              groupId,
+              participantId,
+            })),
+            skipDuplicates: true,
+          });
+        }
       }
 
-      // Update batch status based on results
-      const newStatus =
-        toCreateCount > 0 ? "IMPORTED" : invalidCount === pendingRows.length ? "FAILED" : "VALID";
+      // Update batch status
+      inserted = createdParticipantIds.length;
+      const totalProcessed = pendingRows.length;
+      const batchStatus =
+        inserted > 0 && failed === 0
+          ? "IMPORTED"
+          : inserted > 0 && failed > 0
+          ? "PARTIAL"
+          : "FAILED";
+
       await tx.uploadParticipantBatch.update({
-        where: { id: batch.id },
-        data: { status: newStatus },
+        where: { id: batchId },
+        data: { status: batchStatus },
       });
     });
 
-    // 9) Send emails to newly created participants (outside transaction)
-    if (createdEmails.length > 0) {
+    // Fill summary rows for created users (after success)
+    if (createPayload.length > 0) {
+      // Map email -> row index to fill action lines consistently
+      const emailToIndex = new Map<string, number>();
+      pendingRows.forEach((r, idx) => {
+        if (r.email) emailToIndex.set(r.email.toLowerCase(), idx);
+      });
+
+      for (const c of createPayload) {
+        const idx = (emailToIndex.get(c.email) ?? -1) + 1; // 1-based
+        summaryRows.push([
+          idx > 0 ? idx : summaryRows.length + 1,
+          c.name,
+          c.email,
+          c.mobileNumber,
+          String(StagingStatus.IMPORTED),
+          groupId ? "Created & added to group" : "Created",
+        ]);
+      }
+    }
+
+    // Email credentials (best-effort, outside txn)
+    if (createdEmailPayload.length > 0) {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -256,7 +304,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      for (const { email, name, password } of createdEmails) {
+      for (const { email, name, password } of createdEmailPayload) {
         try {
           await transporter.sendMail({
             from: `"Exam Pro Credential" <${process.env.SMTP_EMAIL}>`,
@@ -275,26 +323,78 @@ Regards,
 Exam Pro Team`,
           });
         } catch (e) {
-          // optional: collect/return email failures
           console.error(`Email send failed for ${email}`, e);
+          // Optionally: you could append a row noting email failure
         }
       }
     }
 
-    return NextResponse.json({
-      message: "Participants processed via batch + staging and added to group.",
-      batchId: batch.id,
-      summary: {
-        fileRows: rawData.length,
-        invalidCount,
-        duplicateCount,
-        createdAndAddedToGroup: createdParticipantsIds.length,
-        addedToGroupExisting: willAddExistingCount,
-        alreadyInGroup: alreadyInGroupCount,
+    // Get admin name for meta
+    const admin = await prisma.user.findUnique({ where: { id: adminId } });
+
+    // Final counts
+    const batchFinalStatus =
+      inserted > 0 && failed === 0
+        ? "IMPORTED"
+        : inserted > 0 && failed > 0
+        ? "PARTIAL"
+        : "FAILED";
+
+    // Build frontend-ready summaryData (same shape as question upload)
+    const summaryData = {
+      columns: ["Row No", "Name", "Email", "Mobile", "Status", "Note"],
+      rows: summaryRows
+        .sort((a, b) => a[0] - b[0]) // sort by row no
+        .map(([rowNo, name, email, mobile, status, note]) => [
+          rowNo,
+          name,
+          email,
+          mobile,
+          String(status),
+          note,
+        ]),
+      totals: {
+        inserted,
+        skipped,
+        failed,
+        total: inserted + skipped + failed,
+      },
+      meta: {
+        adminName: admin?.name ?? "Admin",
+        fileName,
+        batchId,
+        processedAt: formatDateTime(new Date()),
+        batchStatus: batchFinalStatus,
+        ...(groupId ? { groupId } : {}),
+      },
+    };
+
+    // Persist FileUploadSummary
+    await prisma.fileUploadSummary.create({
+      data: {
+        batchId,
+        adminId,
+        type: groupId ? UploadType.PARTICIPANT_GROUP_ADD : UploadType.PARTICIPANT_FILE,
+        fileName,
+        inserted,
+        skipped,
+        failed,
+        summaryData,
       },
     });
+
+    // Response
+    return NextResponse.json({
+      message: "Participants uploaded using staging and processed.",
+      batchId,
+      inserted,
+      skipped,
+      failed,
+      batchStatus: batchFinalStatus,
+      summaryData,
+    });
   } catch (error) {
-    console.error("Merged import error:", error);
+    console.error("Participant upload error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
