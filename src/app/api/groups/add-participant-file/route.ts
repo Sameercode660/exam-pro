@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     // Keep naming parity with question upload API
     const adminId = Number(searchParams.get("adminId") || createdById);
-    const fileName = searchParams.get("fileName") || (file instanceof File ? file.name : "Participants.xlsx");
+    const fileName = "Participants.xlsx";
 
     if (!file || !(file instanceof Blob)) {
       return NextResponse.json({ error: "File not found or invalid" }, { status: 400 });
