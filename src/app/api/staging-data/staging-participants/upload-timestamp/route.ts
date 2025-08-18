@@ -17,8 +17,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const timestamps = await prisma.$queryRaw<Array<{ createdAt: Date }>>`
-      SELECT DISTINCT sp."createdAt"
+    const timestamps = await prisma.$queryRaw<
+      Array<{ createdAt: Date; batchId: number }>
+    >`
+      SELECT DISTINCT sp."createdAt", sp."batchId"
       FROM "StagingParticipant" sp
       JOIN "User" u ON u."id" = sp."createdById"
       WHERE u."organizationId" = ${Number(organizationId)}
@@ -28,15 +30,18 @@ export async function POST(req: NextRequest) {
     const uploadTimestamps = timestamps.map((entry) => {
       const dt = new Date(entry.createdAt);
       return {
+        batchId: entry.batchId,
         raw: entry.createdAt.toISOString(),
-        formatted: dt.toLocaleString("en-IN", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }).replace(",", ""),
+        formatted: dt
+          .toLocaleString("en-IN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          })
+          .replace(",", ""),
       };
     });
 

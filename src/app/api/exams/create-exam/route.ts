@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       statusCode: 500,
-      message: error.message || "Internal Server Error",
+      message: error.message && "Internal Server Error",
       status: false,
     });
   }

@@ -17,8 +17,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const timestamps = await prisma.$queryRaw<Array<{ createdAt: Date }>>`
-      SELECT DISTINCT sq."createdAt"
+    const timestamps = await prisma.$queryRaw<
+      Array<{ createdAt: Date; batchId: number | null }>
+    >`
+      SELECT DISTINCT sq."createdAt", sq."batchId"
       FROM "StagingQuestion" sq
       JOIN "User" u ON u."id" = sq."adminId"
       WHERE u."organizationId" = ${Number(organizationId)}
@@ -28,21 +30,27 @@ export async function POST(req: NextRequest) {
     const uploadTimestamps = timestamps.map((entry) => {
       const dt = new Date(entry.createdAt);
       return {
+        batchId: entry.batchId,
         raw: entry.createdAt.toISOString(),
-        formatted: dt.toLocaleString("en-IN", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }).replace(",", ""),
+        formatted: dt
+          .toLocaleString("en-IN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          })
+          .replace(",", ""),
       };
     });
 
     return NextResponse.json({ uploadTimestamps });
   } catch (error) {
     console.error("[UPLOAD_TIMESTAMPS_API_ERROR]", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

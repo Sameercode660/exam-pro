@@ -5,16 +5,16 @@ import { StagingStatus } from "@/generated/prisma";
 type RequestTypes = {
   organizationId: number;
   status: StagingStatus;
-  uploadTimestamp: string;
+  batchId: number;
 };
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { organizationId, status, uploadTimestamp }: Partial<RequestTypes> =
+    const { organizationId, status, batchId }: Partial<RequestTypes> =
       body;
 
-    console.log(uploadTimestamp)
+    console.log(batchId)
     if (!organizationId) {
       return NextResponse.json(
         { error: "organizationId is required" },
@@ -33,13 +33,8 @@ export async function POST(req: NextRequest) {
       whereClause.status = status;
     }
 
-    if (uploadTimestamp) {
-      const target = new Date(uploadTimestamp);
-      const toleranceMs = 2 * 60 * 1000; 
-      whereClause.createdAt = {
-        gte: new Date(target.getTime() - toleranceMs),
-        lte: new Date(target.getTime() + toleranceMs),
-      };
+ if (batchId) {
+      whereClause.batchId = Number(batchId);
     }
 
     const data = await prisma.stagingQuestion.findMany({

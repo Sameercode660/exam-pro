@@ -6,19 +6,26 @@ type RequestTypes = {
   filter: string;
   organizationId: number;
   adminId: number;
-}
+};
 
 export async function POST(req: NextRequest) {
   try {
-    const { search, filter, organizationId, adminId }: Partial<RequestTypes> = await req.json();
-    console.log(search, filter, organizationId, adminId)
+    const { search, filter, organizationId, adminId }: Partial<RequestTypes> =
+      await req.json();
+    console.log(search, filter, organizationId, adminId);
 
     if (!organizationId) {
-      return NextResponse.json({ error: "organizationId is required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "organizationId is required." },
+        { status: 400 }
+      );
     }
 
     if (filter !== "all" && filter !== "my") {
-      return NextResponse.json({ error: "Invalid filter type." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid filter type." },
+        { status: 400 }
+      );
     }
 
     const searchWords = search ? search.trim().split(/\s+/) : [];
@@ -27,12 +34,15 @@ export async function POST(req: NextRequest) {
     const whereClause: any = {
       organizationId,
       visibility: true,
-      approved: true
+      approved: true,
     };
 
     if (filter === "my") {
       if (!adminId) {
-        return NextResponse.json({ error: "adminId is required for 'my' filter." }, { status: 400 });
+        return NextResponse.json(
+          { error: "adminId is required for 'my' filter." },
+          { status: 400 }
+        );
       }
       whereClause.createdById = adminId;
     }
@@ -43,6 +53,7 @@ export async function POST(req: NextRequest) {
           { name: { contains: word, mode: "insensitive" } },
           { email: { contains: word, mode: "insensitive" } },
           { mobileNumber: { contains: word, mode: "insensitive" } },
+          ...(isNaN(Number(word)) ? [] : [{ batchId: Number(word) }]),
         ],
       }));
     }
@@ -52,6 +63,7 @@ export async function POST(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
+        batchId: true,
         name: true,
         email: true,
         mobileNumber: true,
@@ -60,11 +72,13 @@ export async function POST(req: NextRequest) {
         createdById: true,
       },
     });
-    console.log(participants)
+    console.log(participants);
     return NextResponse.json({ participants });
-
   } catch (err) {
     console.error("Error fetching participants:", err);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error." },
+      { status: 500 }
+    );
   }
 }
