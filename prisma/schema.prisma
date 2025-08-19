@@ -206,7 +206,6 @@ model Exam {
   createdByAdminId Int
   updatedByAdminId Int
   createdById      Int
-  questionLimit    Int?
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
