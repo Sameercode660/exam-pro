@@ -1,14 +1,22 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
 type RequestTypes = {
-  organizationId: number
-}
+  organizationId: number;
+  batchId?: number; 
+};
 
 export async function POST(req: NextRequest) {
   try {
-    const { organizationId }: Partial<RequestTypes> = await req.json();
+    const { organizationId, batchId }: Partial<RequestTypes> = await req.json();
+
+    console.log(batchId)
+    if (!organizationId) {
+      return NextResponse.json(
+        { success: false, message: "organizationId is required" },
+        { status: 400 }
+      );
+    }
 
     const visibleQuestions = await prisma.question.findMany({
       where: {
@@ -16,17 +24,14 @@ export async function POST(req: NextRequest) {
         admin: {
           organizationId,
         },
+        ...(batchId ? { batchId: Number(batchId) } : {}), // filter by batchId only if provided
       },
       include: {
         admin: {
-          select: {
-            name: true,
-          },
+          select: { name: true },
         },
         updatedByAdmin: {
-          select: {
-            name: true,
-          },
+          select: { name: true },
         },
       },
     });
@@ -43,6 +48,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: formatted });
   } catch (error) {
     console.error("Error fetching visible questions:", error);
-    return NextResponse.json({ success: false, message: "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Something went wrong" },
+      { status: 500 }
+    );
   }
 }
