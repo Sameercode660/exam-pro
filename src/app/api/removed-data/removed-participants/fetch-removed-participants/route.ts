@@ -4,11 +4,12 @@ import prisma from "@/utils/prisma";
 type RequestTypes = {
   organizationId: number;
   search: string;
+  batchId: number;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { organizationId, search }: Partial<RequestTypes> = await request.json();
+    const { organizationId, search, batchId }: Partial<RequestTypes> = await request.json();
 
     if (!organizationId) {
       return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
       where: {
         visibility: false,
         organizationId,
+        ...(batchId ? {batchId: Number(batchId)} : {}),
         ...(search && {
           OR: [
             {
@@ -37,6 +39,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         name: true,
+        batchId: true,
         mobileNumber: true,
         createdAt: true,
         createdBy: {
@@ -56,6 +59,7 @@ export async function POST(request: NextRequest) {
     const result = participants.map((p) => ({
       id: p.id,
       name: p.name,
+      batchId: p.batchId,
       mobileNumber: p.mobileNumber,
       createdAt: p.createdAt,
       removedAt: p.updatedAt,

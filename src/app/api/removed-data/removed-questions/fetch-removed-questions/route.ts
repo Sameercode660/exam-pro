@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
     const formatted = visibleQuestions.map((q) => ({
       id: q.id,
       title: q.text,
+      batchId: q.batchId,
       createdAt: q.createdAt,
       updatedAt: q.updatedAt,
       createdBy: q.admin?.name || null,

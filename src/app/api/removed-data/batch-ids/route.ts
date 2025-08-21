@@ -10,7 +10,7 @@ type RequestTypes = {
 export async function POST(req: NextRequest) {
   try {
     const { organizationId, type }: Partial<RequestTypes> = await req.json();
-
+    console.log(type)
     if (!organizationId || !type) {
       return NextResponse.json(
         { error: "organizationId and type are required" },
@@ -34,7 +34,13 @@ export async function POST(req: NextRequest) {
         distinct: ["batchId"],
         orderBy: { createdAt: "desc" },
       });
-    } else {
+    } else if (type === "visible-participants") {
+      data = await prisma.participant.findMany({
+        where: {organizationId, visibility: true}, 
+        select: { batchId: true, createdAt: true },
+        distinct: ["batchId"],
+        orderBy: { createdAt: "desc" },
+      });} else {
       return NextResponse.json(
         { error: "Invalid type. Use 'participants' or 'questions'." },
         { status: 400 }

@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       id: true,
       name: true,
       email: true,
+      mobileNumber: true,
       createdAt: true,
       createdBy: {
         select: {

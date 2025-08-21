@@ -6,13 +6,19 @@ type RequestTypes = {
   filter: string;
   organizationId: number;
   adminId: number;
+  batchId: number;
 };
 
 export async function POST(req: NextRequest) {
   try {
-    const { search, filter, organizationId, adminId }: Partial<RequestTypes> =
-      await req.json();
-    console.log(search, filter, organizationId, adminId);
+    const {
+      search,
+      filter,
+      organizationId,
+      adminId,
+      batchId,
+    }: Partial<RequestTypes> = await req.json();
+    console.log(search, filter, organizationId, adminId, batchId);
 
     if (!organizationId) {
       return NextResponse.json(
@@ -47,13 +53,16 @@ export async function POST(req: NextRequest) {
       whereClause.createdById = adminId;
     }
 
+    if (batchId) {
+      whereClause.batchId = batchId;
+    }
+
     if (searchWords.length > 0) {
       whereClause.AND = searchWords.map((word: string) => ({
         OR: [
           { name: { contains: word, mode: "insensitive" } },
           { email: { contains: word, mode: "insensitive" } },
           { mobileNumber: { contains: word, mode: "insensitive" } },
-          ...(isNaN(Number(word)) ? [] : [{ batchId: Number(word) }]),
         ],
       }));
     }
@@ -70,6 +79,7 @@ export async function POST(req: NextRequest) {
         approved: true,
         createdAt: true,
         createdById: true,
+        password: true
       },
     });
     console.log(participants);
