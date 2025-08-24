@@ -34,7 +34,14 @@ export async function POST(req: Request) {
     // Check if the exam exists and is visible
     const exam = await prisma.exam.findUnique({
       where: { id: examId },
+      include: {
+        questions: true
+      }
     });
+
+    if(exam?.questions.length == 0) {
+      return NextResponse.json({error: 'Exam has no any question added yet'}, {status: 404});
+    }
 
     if (!exam || !exam.visibility) {
       return NextResponse.json(

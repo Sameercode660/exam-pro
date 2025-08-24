@@ -41,6 +41,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Exam not found" }, { status: 404 });
     }
 
+    // if(exam.questions.length == 0) {
+    //   return NextResponse.json({error: "Exam has no question added, please add question first"}, {status: 404});
+    // }
+
     if (exam.status == "Completed") {
       return NextResponse.json(
         { error: "Exam is already completed" },
