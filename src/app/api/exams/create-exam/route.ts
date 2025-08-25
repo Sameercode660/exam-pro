@@ -99,6 +99,16 @@ export async function POST(req: NextRequest) {
       finalStatus = "Inactive";
     }
 
+
+    // duplicate exam 
+
+    const duplicateExam = await prisma.exam.findFirst({
+      where: {
+        title: {
+          
+        }
+      }
+    })
     // Create Exam
     const newExam = await prisma.exam.create({
       data: {
