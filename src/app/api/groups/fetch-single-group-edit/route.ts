@@ -29,10 +29,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }
 
-    if (!group.isActive) {
-      return NextResponse.json({ error: 'Group has expired' }, { status: 410 }); // 410 Gone status is semantically correct
-    }
-
     return NextResponse.json({ group });
   } catch (error) {
     console.error('Error fetching group:', error);

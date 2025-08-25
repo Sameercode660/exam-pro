@@ -73,12 +73,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Build update payload
-    const updateData: any = {};
+    const updateData: any = {isActive: true};
     if (name) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (startDate) updateData.startDate = new Date(startDate);
     if (endDate) updateData.endDate = new Date(endDate);
-    if (typeof isActive === "boolean") updateData.isActive = isActive;
+    // if (typeof isActive === "boolean") updateData.isActive = isActive;?
 
     const updatedGroup = await prisma.group.update({
       where: { id: groupId },
