@@ -7,16 +7,21 @@ type RequestTypes = {
   search: string;
   fromDate: string;
   toDate: string;
-}
+};
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { search = "", fromDate, toDate, organizationId }: Partial<RequestTypes> = body;
+  const {
+    search = "",
+    fromDate,
+    toDate,
+    organizationId,
+  }: Partial<RequestTypes> = body;
 
   try {
-    const userActivities = await prisma.participantTracking.findMany({
+    const userActivities = await prisma.adminsTracking.findMany({
       where: {
-        participant: {
+        admin: {
           organizationId,
           name: {
             contains: search,
@@ -29,7 +34,7 @@ export async function POST(req: NextRequest) {
         },
       },
       include: {
-        participant: true,
+        admin: true,
       },
       orderBy: {
         loginTime: "desc",
@@ -38,6 +43,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data: userActivities });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch user activities" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch user activities" },
+      { status: 500 }
+    );
   }
 }

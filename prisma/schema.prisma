@@ -103,6 +103,7 @@ model User {
   UploadBatch            UploadBatch[]
   UploadParticipantBatch UploadParticipantBatch[]
   FileUploadSummary      FileUploadSummary[]
+  AdminsTracking         AdminsTracking[]
 }
 
 model Organization {
@@ -360,6 +361,17 @@ model ParticipantTracking {
   logoutTime    DateTime
   spentTime     Int
   createdAt     DateTime    @default(now())
+}
+
+// admins activity 
+model AdminsTracking {
+  id         Int      @id @default(autoincrement())
+  adminId    Int
+  admin      User     @relation(fields: [adminId], references: [id])
+  loginTime  DateTime
+  logoutTime DateTime
+  spentTime  Int
+  createdAt  DateTime @default(now())
 }
 
 model UploadBatch {

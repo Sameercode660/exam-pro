@@ -17,9 +17,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "organizationId is required." }, { status: 400 });
     }
 
-    if (filter !== "all" && filter !== "my") {
-      return NextResponse.json({ error: "Invalid filter type." }, { status: 400 });
-    }
+    // if (filter !== "all" && filter !== "my") {
+    //   return NextResponse.json({ error: "Invalid filter type." }, { status: 400 });
+    // }
 
     if (!groupId) {
       return NextResponse.json({ error: "groupId is required." }, { status: 400 });
