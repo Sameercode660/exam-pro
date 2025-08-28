@@ -6,21 +6,23 @@ type RequestTypes = {
   organizationId: number;
   status?: StagingStatus;
   batchId?: number;
+  search?: string;
 };
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { organizationId, status, batchId }: Partial<RequestTypes> = body;
+    const { organizationId, status, batchId, search }: Partial<RequestTypes> = body;
 
     if (!organizationId) {
-      return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "organizationId is required" },
+        { status: 400 }
+      );
     }
 
     const whereClause: any = {
-      admin: {
-        organizationId: Number(organizationId),
-      },
+      admin: { organizationId: Number(organizationId) },
     };
 
     if (status && Object.values(StagingStatus).includes(status)) {
@@ -31,24 +33,28 @@ export async function POST(req: NextRequest) {
       whereClause.batchId = Number(batchId);
     }
 
+    if (search && search.trim() !== "") {
+      whereClause.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { mobileNumber: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
     const data = await prisma.stagingParticipant.findMany({
       where: whereClause,
       include: {
-        admin: {
-          select: {
-            name: true,
-            organizationId: true,
-          },
-        },
+        admin: { select: { name: true, organizationId: true } },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json({ data });
   } catch (error) {
     console.error("[PARTICIPANT_FETCH_ERROR]", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { startOfDay, endOfDay } from "date-fns";
 import prisma from "@/utils/prisma";
 
 type RequestTypes = {
   organizationId: number;
-  search: string;
-  batchId: number;
-}
+  search?: string;
+  batchId?: number;
+  adminId?: number;
+  fromDate?: string;
+  toDate?: string;
+};
 
 export async function POST(request: NextRequest) {
   try {
-    const { organizationId, search, batchId }: Partial<RequestTypes> = await request.json();
+    const { organizationId, search, batchId, adminId, fromDate, toDate }: Partial<RequestTypes> =
+      await request.json();
 
     if (!organizationId) {
       return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
@@ -19,22 +24,18 @@ export async function POST(request: NextRequest) {
       where: {
         visibility: false,
         organizationId,
-        ...(batchId ? {batchId: Number(batchId)} : {}),
+        ...(batchId ? { batchId: Number(batchId) } : {}),
         ...(search && {
           OR: [
-            {
-              name: {
-                contains: search,
-                mode: "insensitive",
-              },
-            },
-            {
-              mobileNumber: {
-                contains: search,
-              },
-            },
+            { name: { contains: search, mode: "insensitive" } },
+            { mobileNumber: { contains: search } },
           ],
         }),
+        ...(adminId ? { createdById: Number(adminId) } : {}),
+        updatedAt: {
+          gte: fromDate ? new Date(startOfDay(new Date(fromDate))) : undefined,
+          lte: toDate ? new Date(endOfDay(new Date(toDate))) : undefined,
+        },
       },
       select: {
         id: true,
@@ -42,17 +43,9 @@ export async function POST(request: NextRequest) {
         batchId: true,
         mobileNumber: true,
         createdAt: true,
-        createdBy: {
-          select: {
-            name: true,
-          },
-        },
-        updatedBy: {
-          select: {
-            name: true,
-          },
-        },
-        updatedAt: true
+        createdBy: { select: { name: true } },
+        updatedBy: { select: { name: true } },
+        updatedAt: true,
       },
     });
 
@@ -65,7 +58,6 @@ export async function POST(request: NextRequest) {
       removedAt: p.updatedAt,
       createdBy: p.createdBy?.name ?? "self",
       removedBy: p.updatedBy?.name ?? null,
-
     }));
 
     return NextResponse.json({ data: result });
