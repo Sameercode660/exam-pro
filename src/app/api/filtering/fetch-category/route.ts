@@ -2,19 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 
 type RequestTypes = {
-  adminId: number;
+  organizationId: number;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { adminId }: Partial<RequestTypes> = await req.json();
+    const { organizationId }: Partial<RequestTypes> = await req.json();
 
-    if (!adminId) {
+    if (!organizationId) {
       return NextResponse.json({ error: "Admin ID is required" }, { status: 400 });
     }
 
     const categories = await prisma.category.findMany({
-      where: { adminId },
+      where: {
+        admin: {
+          organizationId
+        }
+      },
       select: {
         id: true,
         name: true,

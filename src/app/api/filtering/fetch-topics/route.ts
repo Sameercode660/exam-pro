@@ -3,22 +3,24 @@ import prisma from "@/utils/prisma";
 
 type RequestTypes = {
   categoryId: number;
-  adminId: number;
+  organizationId: number;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { categoryId, adminId }: Partial<RequestTypes> = await req.json();
+    const { categoryId, organizationId }: Partial<RequestTypes> = await req.json();
 
-    if (!categoryId || !adminId) {
+    if (!categoryId || !organizationId) {
       return NextResponse.json({ error: "Category ID and Admin ID are required" }, { status: 400 });
     }
 
-    console.log(categoryId, adminId)
+    console.log(categoryId, organizationId)
 
     const topics = await prisma.topic.findMany({
       where: {
-          adminId, 
+          admin: {
+            organizationId
+          }, 
           categoryId
       },
       select: {

@@ -13,6 +13,7 @@ type RequestTypes = {
   correctOption: number;
   difficultyLevel: Difficulty;
   adminId: number;
+  organizationId: number;
 };
 
 export async function POST(req: NextRequest) {
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
       correctOption,
       difficultyLevel,
       adminId,
+      organizationId,
     }: Partial<RequestTypes> = await req.json();
 
     if (
@@ -51,23 +53,43 @@ export async function POST(req: NextRequest) {
 
     // Check or create the category
     let category = await prisma.category.findFirst({
-      where: { name: categoryName },
+      where: {
+        admin: {
+          organizationId,
+        },
+        name: {
+          equals: categoryName,
+          mode: "insensitive",
+        },
+      },
     });
 
     if (!category) {
       category = await prisma.category.create({
-        data: { name: categoryName },
+        data: { name: categoryName, adminId },
       });
     }
 
     // Check or create the topic
 
     let topic = await prisma.topic.findFirst({
-      where: { name: topicName, categoryId: category.id },
+      where: {
+        name: {
+          equals: topicName,
+          mode: "insensitive", 
+        },
+        categoryId: category.id,
+        adminId,
+      },
     });
+
     if (!topic) {
       topic = await prisma.topic.create({
-        data: { name: topicName, categoryId: category.id },
+        data: {
+          name: topicName,  
+          categoryId: category.id,
+          adminId,
+        },
       });
     }
 
