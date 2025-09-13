@@ -12,7 +12,7 @@ interface HomeProps {
 const Home: React.FC<HomeProps> = ({ children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { title } = useLayout();
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const router = useRouter();
 
   return (
@@ -74,9 +74,16 @@ const Home: React.FC<HomeProps> = ({ children }) => {
             &#9776; {/* Menu icon */}
           </button>
           <div className="text-xl font-semibold">{title}</div>
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">P</div>
-            <span className="text-gray-600">Profile</span>
+          <div className="flex items-center space-x-3 flex-col" onClick={() => {
+            router.push('/home/profile')
+          }}>
+            <div className='flex justify-between items-center space-x-3 cursor-pointer'>
+              <span className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">{user.name[0]}</span>
+              <span className="text-gray-600">{user.name}</span>
+            </div>
+            {/* <div>
+              <span className="text-gray-600 text-sm">Profile</span>
+            </div> */}
           </div>
         </header>
 
